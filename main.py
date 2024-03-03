@@ -95,7 +95,7 @@ class MyWidget(QtWidgets.QWidget):
             QtWidgets.QMessageBox.information(self, "提示", "没有原文去哪写书评！")
             return
 
-        def submit_note(self):
+        def submit_note(_widget):
             # 构造数据
             data = {
                 "title": title,  # 书名：必填
@@ -122,10 +122,10 @@ class MyWidget(QtWidgets.QWidget):
             if response.status_code == 200:  # 判断返回状态码
                 print("保存成功！")
                 # 弹出提示窗口，显示：保存成功
-                QtWidgets.QMessageBox.information(self, "提示", "保存成功！")
+                QtWidgets.QMessageBox.information(_widget, "提示", "保存成功！")
                 # self.note_text.delete("1.0", "end")  # 清空笔记文本框
             else:
-                QtWidgets.QMessageBox.information(self, "提示", "保存失败，检查你填入的内容")
+                QtWidgets.QMessageBox.information(_widget, "提示", "保存失败，检查你填入的内容")
                 print("保存失败，请重试")
 
         submit_note(self)
@@ -198,13 +198,6 @@ class MyWidget(QtWidgets.QWidget):
         book_name = book_name[:-4]
 
         post_to_merpyzf(data, book_name)
-
-
-class csv_to_merpyzf:
-    def __init__(self):
-        self.csv_file = ""
-        with open("merpyzf.csv", "r", encoding="utf-8") as f:
-            info = f.readlines()
 
 
 if __name__ == "__main__":
