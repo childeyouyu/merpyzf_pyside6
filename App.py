@@ -100,7 +100,8 @@ class MyWidget(QtWidgets.QWidget):
             {"title": title, "cover": cover, "author": author, "translator": translator, "publisher": publisher,
              "isbn": isbn},
             text,
-            note)
+            note
+        )
 
         # check status code and display output
         if status_code == 200:  # 判断返回状态码
