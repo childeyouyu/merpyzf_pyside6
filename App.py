@@ -1,16 +1,16 @@
 import os
+
 from PySide6 import QtWidgets
 from PySide6.QtWidgets import QHBoxLayout, QFileDialog
-from functions import (
-    file_csv_to_merpyzf,
-    post_to_merpyzf,
-    submit_note
-)
+
+from functions import file_csv_to_merpyzf, post_to_merpyzf, submit_note
 
 
 class MyWidget(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, ip):
         super().__init__()
+
+        self.ip = ip
 
         self.layout = QHBoxLayout()
 
@@ -42,7 +42,7 @@ class MyWidget(QtWidgets.QWidget):
         self.publisher_edit = QtWidgets.QLineEdit()
         self.isbn_edit = QtWidgets.QLineEdit()
 
-        # 创建一个调色板并设置文本颜色为红色
+        # 创建一个调色板并设置文本颜色为绿色
         self.ip_edit.setStyleSheet("color: green")
         self.title_edit.setStyleSheet("color: green")
         self.author_edit.setStyleSheet("color: green")
@@ -75,7 +75,7 @@ class MyWidget(QtWidgets.QWidget):
 
     def button_clicked(self):
         # 获取输入
-        ip = self.ip_edit.text()  # 获取 ip 输入
+        ip = self.ip  # 获取 ip 输入
         title = self.title_edit.text()  # 获取书名输入
         cover = self.cover.text()
         author = self.author_edit.text()  # 获取作者输入
@@ -85,10 +85,10 @@ class MyWidget(QtWidgets.QWidget):
         text = self.line_edit.toPlainText()  # 获取原文输入
         note = self.book_extracts_edit.toPlainText()  # 获取笔记输入
 
-        if ip == "":
-            QtWidgets.QMessageBox.information(self, "提示", "找不到你滴 ip 呀！")
-            return
-        elif title == "":
+        # if ip == "":
+        #     QtWidgets.QMessageBox.information(self, "提示", "找不到你滴 ip 呀！")
+        #     return
+        if title == "":
             QtWidgets.QMessageBox.information(self, "提示", "书名不能为空哦！")
             return
         elif text == "":
@@ -97,10 +97,16 @@ class MyWidget(QtWidgets.QWidget):
 
         status_code = submit_note(
             ip,
-            {"title": title, "cover": cover, "author": author, "translator": translator, "publisher": publisher,
-             "isbn": isbn},
+            {
+                "title": title,
+                "cover": cover,
+                "author": author,
+                "translator": translator,
+                "publisher": publisher,
+                "isbn": isbn,
+            },
             text,
-            note
+            note,
         )
 
         # check status code and display output
@@ -110,7 +116,9 @@ class MyWidget(QtWidgets.QWidget):
             QtWidgets.QMessageBox.information(self, "提示", "保存成功！")
             # self.note_text.delete("1.0", "end")  # 清空笔记文本框
         else:
-            QtWidgets.QMessageBox.information(self, "提示", "保存失败，检查你填入的内容")
+            QtWidgets.QMessageBox.information(
+                self, "提示", "保存失败，检查你填入的内容"
+            )
             print("保存失败，请重试")
 
     def file_to_merpyzf_btn_clicked(self):
@@ -138,5 +146,7 @@ class MyWidget(QtWidgets.QWidget):
                 QtWidgets.QMessageBox.information(self, "提示", "保存成功！")
             else:
                 QtWidgets.QMessageBox.information(
-                    self, "提示", "保存失败，向开发者反馈一下吧。" "邮箱：youyu273@foxmail.com"
+                    self,
+                    "提示",
+                    "保存失败，向开发者反馈一下吧。" "邮箱：youyu273@foxmail.com",
                 )

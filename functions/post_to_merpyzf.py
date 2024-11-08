@@ -6,7 +6,7 @@ def post_to_merpyzf(line, name, ip):
     print(line)
     note_data = {
         "title": name,  # 书名：required
-        "cover": "https:#img2.doubanio.com/view/subject/l/public/s29707472.jpg",  # 书籍封面：optional
+        "cover": "/",  # 书籍封面：optional
         "author": "author",  # 作者：optional
         "translator": "translator",  # 译者：optional
         "publisher": "publisher",  # 出版社：optional

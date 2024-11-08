@@ -1,13 +1,9 @@
-from PySide6.QtWidgets import QApplication, QWidget, QMainWindow
-from qt_material import apply_stylesheet
 import sys
 
+from PySide6.QtWidgets import QApplication
+from qt_material import apply_stylesheet
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.resize(800, 600)
-        self.setWindowTitle("纸间书摘 PC 书评导入")
+from ui import MainWindow
 
 
 def main():
@@ -20,5 +16,5 @@ def main():
     sys.exit(app.exec())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
