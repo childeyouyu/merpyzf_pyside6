@@ -12,7 +12,10 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.current_directory = f"{Path.cwd()}/../book.db"
+        # self.current_directory = f"{Path.cwd()}/../book.db"
+        self.current_directory = f"{Path.cwd()}/book.db"
+        print(f"{Path.cwd()}/book.db")
+        print(f"{Path.cwd()}/../book.db")
         self.resize(800, 600)
         self.setWindowTitle("纸间书摘 PC 书评导入")
         self.ip = ""
