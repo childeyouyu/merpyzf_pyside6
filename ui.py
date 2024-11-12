@@ -12,78 +12,100 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.shadow = QGraphicsDropShadowEffect(self)
+        self.shadow.setBlurRadius(15)
+        self.shadow.setColor(QColor(0, 0, 0, 150))
+        self.shadow.setOffset(0, 0)
+        self.setGraphicsEffect(self.shadow)
         # self.current_directory = f"{Path.cwd()}/../book.db"
         self.current_directory = f"{Path.cwd()}/book.db"
-        print(f"{Path.cwd()}/book.db")
-        print(f"{Path.cwd()}/../book.db")
+
         self.resize(800, 600)
         self.setWindowTitle("纸间书摘 PC 书评导入")
         self.ip = ""
         # 隐藏标题栏
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+
+        # 设置自定义标题栏
         toolbar = QToolBar()
         toolbar.setMovable(False)
 
-        btn_open = QWidget()
-        toolbar.addWidget(btn_open)
-        layout = QHBoxLayout()
-        layout.addStretch()
-        btn_open.setLayout(layout)
+        self.btn_author = QPushButton(icon=QIcon("assets/author.svg"))
+        self.btn_author.clicked.connect(lambda: self.author_interface())
+        self.btn_settings = QPushButton(icon=QIcon("assets/settings.svg"))
+        self.btn_author.setFlat(True)
+        self.btn_settings.setFlat(True)
 
-        btn_min = QPushButton(icon=QIcon("assets/min.svg"))
-        btn_max = QPushButton(icon=QIcon("assets/icon-max.svg"))
+        widget_filling = QWidget()
+        toolbar.addWidget(widget_filling)
+        layout = QHBoxLayout(widget_filling)
+        layout.addWidget(self.btn_author)
+        layout.addWidget(self.btn_settings)
+        layout.addStretch()
+
+        self.btn_min = QPushButton(icon=QIcon("assets/min.svg"))
+        self.btn_max = QPushButton(icon=QIcon("assets/max-normal.svg"))
         btn_close = QPushButton(icon=QIcon("assets/close.svg"))
 
-        layout.addWidget(btn_min)
-        layout.addWidget(btn_max)
-        layout.addWidget(btn_close)
-        # toolbar.addWidget(btn_min)
-        # toolbar.addWidget(btn_max)
-        # toolbar.addWidget(btn_close)
-        # 最小化、最大化、结束程序
-        btn_min.clicked.connect(self.showMinimized)
+        self.btn_min.setFlat(True)
+        self.btn_max.setFlat(True)
+        btn_close.setFlat(True)
 
+        layout.addWidget(self.btn_min)
+        layout.addWidget(self.btn_max)
+        layout.addWidget(btn_close)
+        # 最小化、最大化、结束程序
+        self.btn_min.clicked.connect(self.showMinimized)
         # 判断当前状态，如果是窗口模式，图片为最大化，功能是最大化；
         # 如果是最大化模式，反之。
-        btn_max.clicked.connect(lambda: self.window_max())
+        self.btn_max.clicked.connect(lambda: self.window_max())
         btn_close.clicked.connect(self.close)
 
         self.addToolBar(toolbar)
+        toolbar.mouseMoveEvent = self.move_title_bar
 
         self.initialize_ui()
 
-    def mousePressEvent(self, event):  # 鼠标左键按下时获取鼠标坐标
-        if event.button() == Qt.LeftButton:
-            self._move_drag = True
-            self.cursor_win_pos = event.globalPosition() - self.pos()
-            event.accept()
+    def author_interface(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
 
-    def mouseMoveEvent(self, event):  # 鼠标在按下左键的情况下移动时,根据坐标移动界面
-        # 移动事件
-        if Qt.LeftButton and self._move_drag:
-            m_Point = event.globalPosition() - self.cursor_win_pos
-            self.move(m_Point.x(), m_Point.y())
-            event.accept()
+        layout.addWidget(QLabel(f"<span style='font-size:24pt'>作者简介</span>"))
+        layout.addWidget(QLabel("Hello ，这里是公子有语，语书摘的开发者。"))
+        label_1 = QLabel(
+            "语书摘是一款专门为纸见书摘开发的第三方app，用于在Windows上进行书摘记录，并提供通过api导入到手机功能的程序。"
+        )
+        label_1.setWordWrap(True)
+        layout.addWidget(label_1)
+        layout.addWidget(QLabel("本程序使用 Python、PySide6开发而成。"))
 
-    def mouseReleaseEvent(self, event):  # 鼠标按键释放时,取消移动
-        self._move_drag = False
+        label_2 = QLabel(
+            "如果程序对你有帮助，欢迎您的捐助或 <a href='https://github.com/childeyouyu/merpyzf_pyside6'>Star</a>"
+        )
+        label_2.setOpenExternalLinks(True)
+        layout.addWidget(label_2)
+
+        label_3 = QLabel()
+        pixmap = QPixmap("assets/公子有语.png")
+        # 缩放图片到新的尺寸
+        scaled_pixmap = pixmap.scaled(
+            300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )  # 设置新的尺寸为100x100
+        label_3.setPixmap(scaled_pixmap)
+        label_3.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label_3)
+
+        self.setCentralWidget(widget)
 
     def window_max(self):
         if self.isMaximized():
             self.showNormal()
+            self.btn_max.setIcon(QIcon("assets/max-normal.svg"))
         else:
             self.showMaximized()
+            self.btn_max.setIcon(QIcon("assets/max-max.svg"))
 
-    # def mousePressEvent(self, event: QtGui.QMouseEvent):
-    #     if event.button() == Qt.LeftButton:
-    #         print("点击了鼠标左键")
-    #
-    # def mouseMoveEvent(self, event: QtGui.QMouseEvent):
-    #     print(f"鼠标移动  x:{event.x()} y:{event.y()}")
-    #
-    # def mouseReleaseEvent(self, event: QtGui.QMouseEvent):
-    #     if event.button() == Qt.LeftButton:
-    #         print("释放了鼠标左键")
+        self.btn_max.clearFocus()
 
     def move_title_bar(self, event):
         """
@@ -110,7 +132,7 @@ class MainWindow(QMainWindow):
         form.addRow(QLabel("ip地址"), self.ip_text)
 
         self.layout.addWidget(w)
-        # 上面的是第一行，ip地址，下面写的是已经甜家国的书，储存在一个数据库中，可以删除
+        # 上面的是第一行，ip地址，下面写的是已经填写过的书，储存在一个数据库中，可以删除
 
         # 读取数据库，打开图书表
 
@@ -125,16 +147,25 @@ class MainWindow(QMainWindow):
 
         # 把读取到的书籍列表
         books_widget = QWidget()
-        bw_layout = QFormLayout()
+        bw_layout = QVBoxLayout()
         books_widget.setLayout(bw_layout)
+        self.ip_text.setFocus()
 
         for book in books:
+            widget_book = QWidget()
+            layout_book = QHBoxLayout(widget_book)
             book_name = QPushButton(f"{book[1]}")
+
             book_name.clicked.connect(lambda _, x=book[1]: self.open_book_note(x))
 
-            book_id = QPushButton(f"删除图书")
-            book_id.clicked.connect(lambda _, x=book[1]: self.ok_ok(x))
-            bw_layout.addRow(book_name, book_id)
+            remove_book = QPushButton(icon=QIcon("assets/remove.svg"))
+            remove_book.setFlat(True)
+            remove_book.clicked.connect(lambda _, x=book[1]: self.ok_ok(x))
+
+            layout_book.addWidget(book_name, 1)
+            layout_book.addWidget(remove_book, 0, Qt.AlignmentFlag.AlignRight)
+
+            bw_layout.addWidget(widget_book)
 
         self.layout.addWidget(books_widget)
 
@@ -145,32 +176,52 @@ class MainWindow(QMainWindow):
 
     def open_write_info(self):
 
-        self.ip = self.ip_text.text()
-
-        print(self.ip)
-
+        ip_new_and_return_button = self.ip_new_and_return_button()
         widget = QWidget()
-        layout = QVBoxLayout()
-        widget.setLayout(layout)
+        layout = QVBoxLayout(widget)
 
-        return_button = QPushButton(f"返回菜单   当前 ip：{self.ip}")
-        return_button.clicked.connect(lambda: self.initialize_ui())
-        layout.addWidget(return_button)
-        layout.addWidget(MyWidget(self.ip))
+        layout.addWidget(ip_new_and_return_button[1])
+        layout.addWidget(MyWidget())
         self.setCentralWidget(widget)
+        ip_new_and_return_button[0].setFocus()
+
+    def ip_new_and_return_button(self):
+        self.ip = self.ip_text.text()
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+
+        ip_line = QLineEdit()
+        ip_line.setText(f"{self.ip}")
+        change_ip_button = QPushButton("修改 ip")
+        return_button = QPushButton(f"返回菜单   当前 ip：{self.ip}")
+
+        def ip_change():
+            self.ip = ip_line.text()
+            return_button.setText(f"返回菜单   当前 ip：{self.ip}")
+
+        change_ip_button.clicked.connect(lambda: ip_change())
+
+        return_button.clicked.connect(lambda: self.initialize_ui())
+
+        layout.addWidget(ip_line)
+        layout.addWidget(change_ip_button)
+        layout.addWidget(return_button)
+
+        return ip_line, widget
 
     def ok_ok(self, book_name):
         dlg = QDialog(self)
         dlg.setWindowTitle(f"二次确定")
-
-        layout = QFormLayout()
+        dlg.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        layout = QHBoxLayout()
         layout.addWidget(QLabel(f"你确认要删除图书{book_name}吗？"))
 
         affirm = QPushButton("确认")
         affirm.clicked.connect(lambda _, x=book_name: self.remove_book(x))
         cancel = QPushButton("取消")
         cancel.clicked.connect(dlg.close)
-        layout.addRow(affirm, cancel)
+        layout.addWidget(affirm)
+        layout.addWidget(cancel)
 
         dlg.setLayout(layout)
 
@@ -200,42 +251,87 @@ class MainWindow(QMainWindow):
         widget_all = QWidget()  # 最大的整块，里面放一个列布局
         layout = QVBoxLayout(widget_all)
         # 列布局第一行：行布局：当前ip：edit line，修改ip：button
-        widget_first = QWidget()
-        layout_first = QFormLayout(widget_first)
-        ip_line = QLineEdit()
-        ip_line.setText(f"{self.ip}")
-        change_ip_button = QPushButton("修改 ip")
-        layout_first.addRow(ip_line, change_ip_button)
-
-        layout.addWidget(widget_first)
+        widget_first = self.ip_new_and_return_button()
+        layout.addWidget(widget_first[1])
 
         # 第二行：书名，字体大一点右侧加按钮
-        layout.addWidget(QLabel(book_name))
-        # 第三行，分成两个列布局
-        widget_second = QWidget()
-        layout_second = QHBoxLayout(widget_second)
+        book_name_label = QLabel(
+            f"<span style='font-size:16pt'>{book_name}</span>"
+            # f"<span style='font-size:16pt; color:#FF0000;'>{book_name}</span>"
+        )
+        book_name_label.setWordWrap(True)
+        book_name_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(book_name_label)
+        # book_name_label.setStyleSheet("QLabel { color: red; background-color: green; }")
 
-        widget_left = QWidget()
-        widget_right = QWidget()
-        layout_second.addWidget(widget_left)
-        layout_second.addWidget(widget_right)
-
-        layout.addLayout(layout_second)
+        # 第三行，显示书摘
+        # widget_second = QWidget()
+        # layout_second = QHBoxLayout(widget_second)
 
         # 左侧：滚动的列布局，居中显示，里面放很多的小widget，内容是：原文+书摘，
         area = QScrollArea()
+        widget_area = QWidget()
+        # widget_area.setStyleSheet("background-color: rgb(255, 255, 255);")
+        area.setWidgetResizable(True)
+        # area.setStyleSheet("background-color: rgb(255, 255, 255);")
+        # area.setWidget(widget_area)
+        # widget_right = QWidget()
+        # layout_second.addWidget(widget_left)
+        # layout_second.addWidget(widget_right)
+        layout_area = QVBoxLayout(widget_area)
+        layout_area.addStretch(1)
+        # layout.addLayout(layout_area)
+        # layout_row = QHBoxLayout(widget_left)
+        # layout_row.setStretch(0, 1)
 
-        layout_left = QVBoxLayout(widget_left)
+        # widget_child = QWidget()
+        # layout_area = QVBoxLayout(widget_child)
 
-        for r in range(15):
-            for i in note_list:
-                layout_left.addWidget(QLabel(i[1]))
-                layout_left.addWidget(QLabel(i[2]))
-                layout_left.addWidget(QPushButton("删除书摘"))
-                layout_left.addWidget(QLabel(""))
+        # for r in range(15):
+        for i in note_list:
+            # zw = QLabel(
+            #     "111111111111111111111111111111111111111111111111111111111111111111"
+            #     "11111111111111111111111111111可能1111111111111111111111111111111111111"
+            # )
+            text = QLabel(i[1])
+            note = QLabel(i[2])
+            # layout_area.addWidget(zw)
+            layout_area.addWidget(
+                text
+                # , alignment=Qt.AlignmentFlag.AlignCenter
+            )
+            # 设置一个分割线
+            frame = QFrame()
+            frame.setFrameShape(QFrame.Shape.HLine)  # 设置为水平分割线
+            frame.setLineWidth(1)  # 设置分割线宽度为1像素
+            layout_area.addWidget(frame)
+            layout_area.addWidget(note)
 
-        area.setWidget(widget_left)
+            text.setAlignment(Qt.AlignCenter)
+            note.setAlignment(Qt.AlignCenter)
+
+            text.setWordWrap(True)
+            note.setWordWrap(True)
+
+            widget_control_book = QWidget()
+            layout_control_book = QHBoxLayout(widget_control_book)
+
+            change_note_btn = QPushButton("修改书摘")
+            remove_note_btn = QPushButton(icon=QIcon("assets/remove.svg"))  # 删除书摘
+            # remove_note_btn.setFlat(True)
+
+            layout_control_book.addWidget(change_note_btn)
+            layout_control_book.addWidget(remove_note_btn)
+
+            layout_area.addWidget(widget_control_book)
+            # layout_area.addWidget(QPushButton("删除书摘"))
+            # zw.setWordWrap(True)
+
+            # text.setStyleSheet("QLabel { width: 100%;font-size:20pt; }")
+            # note.setStyleSheet("QLabel { width: 100%;font-size:20pt; }")
+
         # 右侧:写新书摘按钮和提交书摘到手机按钮
+        widget_right = QWidget()
         layout_right = QVBoxLayout(widget_right)
         write_note_button = QPushButton("增加书摘")
         submit_to_phone_button = QPushButton("提交到手机")
@@ -243,8 +339,11 @@ class MainWindow(QMainWindow):
         layout_right.addWidget(write_note_button)
         layout_right.addWidget(submit_to_phone_button)
 
+        widget_area.update()
+        area.setWidget(widget_area)
         layout.addWidget(area)
         layout.addWidget(widget_right)
 
         self.setCentralWidget(widget_all)
+        widget_first[0].setFocus()
         ...

@@ -1,7 +1,9 @@
-from PySide6 import QtWidgets
-import qt_material
-from App import MyWidget
 import sys
+
+import qt_material
+from PySide6 import QtWidgets
+
+from App import MyWidget
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])

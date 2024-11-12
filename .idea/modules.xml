@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../Python/Pyside6开发日记/.idea/Pyside6开发日记.iml" filepath="$PROJECT_DIR$/../Python/Pyside6开发日记/.idea/Pyside6开发日记.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/merpyzf_pyside6.iml" filepath="$PROJECT_DIR$/.idea/merpyzf_pyside6.iml" />
     </modules>
   </component>
