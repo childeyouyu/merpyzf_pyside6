@@ -4,6 +4,7 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QFileDialog
 
 from functions import file_csv_to_merpyzf, post_to_merpyzf
+from functions.save_to_date import save_book
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -27,6 +28,7 @@ class MyWidget(QtWidgets.QWidget):
         self.translator_edit = QtWidgets.QLineEdit()
         self.publisher_edit = QtWidgets.QLineEdit()
         self.isbn_edit = QtWidgets.QLineEdit()
+        self.boot_introduction = QtWidgets.QTextEdit()
 
         # 创建一个调色板并设置文本颜色为绿色
         # self.ip_edit.setStyleSheet("color: green")
@@ -41,6 +43,7 @@ class MyWidget(QtWidgets.QWidget):
         layout.addRow("译者", self.translator_edit)
         layout.addRow("出版社", self.publisher_edit)
         layout.addRow("图书 ISBN", self.isbn_edit)
+        layout.addRow("图书简介", self.boot_introduction)
 
         # 创建QFrame
         frame = QtWidgets.QFrame(self)
@@ -65,22 +68,24 @@ class MyWidget(QtWidgets.QWidget):
 
     def button_clicked(self):
         # 获取输入
-        ip = self.ip  # 获取 ip 输入
+        # ip = self.ip  # 获取 ip 输入
         title = self.title_edit.text()  # 获取书名输入
-        cover = self.cover.text()
+        # cover = self.cover.text()
         author = self.author_edit.text()  # 获取作者输入
         translator = self.translator_edit.text()  # 获取译者输入
         publisher = self.publisher_edit.text()  # 获取出版社输入
         isbn = self.isbn_edit.text()  # 获取 ISBN 输入
+        book_introduction = self.boot_introduction.toPlainText()
         # text = self.line_edit.toPlainText()  # 获取原文输入
         # note = self.book_extracts_edit.toPlainText()  # 获取笔记输入
 
-        if self.ip == "":
-            QtWidgets.QMessageBox.information(self, "提示", "找不到你滴 ip 呀！")
-            return
+        # if self.ip == "":
+        #     QtWidgets.QMessageBox.information(self, "提示", "找不到你滴 ip 呀！")
+        #     return
         if title == "":
             QtWidgets.QMessageBox.information(self, "提示", "书名不能为空哦！")
             return
+        save_book(title, author, translator, publisher, isbn, book_introduction)
         # elif text == "":
         #     QtWidgets.QMessageBox.information(self, "提示", "没有原文去哪写书评！")
         #     return

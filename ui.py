@@ -30,15 +30,19 @@ class MainWindow(QMainWindow):
         toolbar = QToolBar()
         toolbar.setMovable(False)
 
+        self.btn_home = QPushButton(icon=QIcon("assets/home.svg"))
+        self.btn_home.clicked.connect(lambda: self.initialize_ui())
         self.btn_author = QPushButton(icon=QIcon("assets/author.svg"))
         self.btn_author.clicked.connect(lambda: self.author_interface())
         self.btn_settings = QPushButton(icon=QIcon("assets/settings.svg"))
+        self.btn_home.setFlat(True)
         self.btn_author.setFlat(True)
         self.btn_settings.setFlat(True)
 
         widget_filling = QWidget()
         toolbar.addWidget(widget_filling)
         layout = QHBoxLayout(widget_filling)
+        layout.addWidget(self.btn_home)
         layout.addWidget(self.btn_author)
         layout.addWidget(self.btn_settings)
         layout.addStretch()
@@ -71,9 +75,13 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(widget)
 
         layout.addWidget(QLabel(f"<span style='font-size:24pt'>作者简介</span>"))
-        layout.addWidget(QLabel("Hello ，这里是公子有语，语书摘的开发者。"))
+        label_0 = QLabel(
+            "Hello ，这里是<a href='https://childeyouyu.github.io/'>公子有语</a>，语书摘的开发者。"
+        )
+        label_0.setOpenExternalLinks(True)
+        layout.addWidget(label_0)
         label_1 = QLabel(
-            "语书摘是一款专门为纸见书摘开发的第三方app，用于在Windows上进行书摘记录，并提供通过api导入到手机功能的程序。"
+            "语书摘是一款专门为纸间书摘开发的第三方app，用于在Windows上进行书摘记录，并提供通过api导入到手机功能的程序。"
         )
         label_1.setWordWrap(True)
         layout.addWidget(label_1)
@@ -151,6 +159,8 @@ class MainWindow(QMainWindow):
         books_widget.setLayout(bw_layout)
         self.ip_text.setFocus()
 
+        area = QScrollArea()
+        area.setWidgetResizable(True)
         for book in books:
             widget_book = QWidget()
             layout_book = QHBoxLayout(widget_book)
@@ -167,7 +177,8 @@ class MainWindow(QMainWindow):
 
             bw_layout.addWidget(widget_book)
 
-        self.layout.addWidget(books_widget)
+        area.setWidget(books_widget)
+        self.layout.addWidget(area)
 
         self.layout.addStretch()
         open_write_info = QPushButton("记录新书")
@@ -210,22 +221,22 @@ class MainWindow(QMainWindow):
         return ip_line, widget
 
     def ok_ok(self, book_name):
-        dlg = QDialog(self)
-        dlg.setWindowTitle(f"二次确定")
-        dlg.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        self.dlg = QDialog(self)
+        self.dlg.setWindowTitle(f"二次确定")
+        self.dlg.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         layout = QHBoxLayout()
         layout.addWidget(QLabel(f"你确认要删除图书{book_name}吗？"))
 
         affirm = QPushButton("确认")
         affirm.clicked.connect(lambda _, x=book_name: self.remove_book(x))
         cancel = QPushButton("取消")
-        cancel.clicked.connect(dlg.close)
+        cancel.clicked.connect(self.dlg.close)
         layout.addWidget(affirm)
         layout.addWidget(cancel)
 
-        dlg.setLayout(layout)
+        self.dlg.setLayout(layout)
 
-        dlg.exec()
+        self.dlg.exec()
 
     def remove_book(self, book_name):
         conn = sqlite3.connect(self.current_directory)
@@ -234,7 +245,31 @@ class MainWindow(QMainWindow):
         conn.commit()
         conn.close()
         self.initialize_ui()
+        self.dlg.close()
         print(book_name)
+
+    def add_note_interface(self, book_name, text="", note=""):
+        widget = QWidget()
+        layout = QFormLayout(widget)
+
+        submit_note_or_not_checkbox = QCheckBox("同时提交书摘到纸间书摘")
+        text = QTextEdit(text)
+        note = QTextEdit(note)
+        layout.addRow(QLabel("原文"), text)
+        layout.addRow(QLabel("想法"), note)
+
+        h_widget = QWidget()
+        h_widget_layout = QHBoxLayout(h_widget)
+
+        btn_add_return = QPushButton("提交并返回")
+        btn_add_just = QPushButton("提交但不返回")
+
+        h_widget_layout.addWidget(btn_add_return)
+        h_widget_layout.addWidget(btn_add_just)
+
+        layout.addWidget(h_widget)
+
+        self.setCentralWidget(widget)
 
     def open_book_note(self, book_name):
         select_note_sql = f"SELECT * FROM {book_name}"
@@ -334,6 +369,9 @@ class MainWindow(QMainWindow):
         widget_right = QWidget()
         layout_right = QVBoxLayout(widget_right)
         write_note_button = QPushButton("增加书摘")
+        write_note_button.clicked.connect(
+            lambda _, x=book_name: self.add_note_interface(x)
+        )
         submit_to_phone_button = QPushButton("提交到手机")
 
         layout_right.addWidget(write_note_button)
