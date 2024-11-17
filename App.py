@@ -1,10 +1,9 @@
 import os
-
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtWidgets import QFileDialog
 
 from functions import file_csv_to_merpyzf, post_to_merpyzf
-from functions.save_to_date import save_book
+from functions.save_to_date import ReadAndWriteDate
 
 
 class MyWidget(QtWidgets.QWidget):
@@ -12,6 +11,7 @@ class MyWidget(QtWidgets.QWidget):
         super().__init__()
 
         # self.layout = QHBoxLayout()
+        self.read_write_date = ReadAndWriteDate()
 
         self.QWidget = QtWidgets.QWidget()
         # self.layout.addWidget(self.QWidget)
@@ -85,7 +85,7 @@ class MyWidget(QtWidgets.QWidget):
         if title == "":
             QtWidgets.QMessageBox.information(self, "提示", "书名不能为空哦！")
             return
-        save_book(title, author, translator, publisher, isbn, book_introduction)
+        self.read_write_date.save_book(title, author, translator, publisher, isbn, book_introduction)
         # elif text == "":
         #     QtWidgets.QMessageBox.information(self, "提示", "没有原文去哪写书评！")
         #     return

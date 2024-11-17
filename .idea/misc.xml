@@ -3,7 +3,7 @@
   <component name="Black">
     <option name="enabledOnReformat" value="true" />
     <option name="enabledOnSave" value="true" />
-    <option name="sdkName" value="Python 3.12 (merpyzf_pyside6)" />
+    <option name="sdkName" value="Python 3.12 (解释器)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.13" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (解释器)" project-jdk-type="Python SDK" />
 </project>

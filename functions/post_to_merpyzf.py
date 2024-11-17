@@ -1,9 +1,10 @@
-import requests
 import json
+
+import requests
 
 
 def post_to_merpyzf(line, name, ip):
-    print(line)
+    # print(line)
     note_data = {
         "title": name,  # 书名：required
         "cover": "/",  # 书籍封面：optional
@@ -16,15 +17,17 @@ def post_to_merpyzf(line, name, ip):
         "locationUnit": 0,  # 书籍页码类型，required。可取值：0：进度；1：位置；2：页码
         "entries": [
             {
-                "text": line["ExcerptFromTheOriginalText"],
-                "note": line["idea"],
-                "chapter": line["chapterName"],
-                "page": line["progress"],
-                "timestamp": line["theTimeWhenTheNoteWasCreated"],
+                "text": line[0],
+                # "text": line["ExcerptFromTheOriginalText"],
+                "note": line[1],
+                # "note": line["idea"],
+                # "chapter": line["chapterName"],
+                # "page": line["progress"],
+                # "timestamp": line["theTimeWhenTheNoteWasCreated"],
             }
         ],
     }
-    print(json.dumps(note_data))
+    # print(json.dumps(note_data))
     url = f"http://{ip}:8080/send"
     headers = {"ContentType": "application/json"}  # 设置请求头
     response = requests.post(

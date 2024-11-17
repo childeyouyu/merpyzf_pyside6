@@ -6,22 +6,26 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from App import MyWidget
+from functions.post_to_merpyzf import post_to_merpyzf
+from functions.save_to_date import ReadAndWriteDate
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.read_write_date = ReadAndWriteDate()
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setBlurRadius(15)
         self.shadow.setColor(QColor(0, 0, 0, 150))
         self.shadow.setOffset(0, 0)
         self.setGraphicsEffect(self.shadow)
-        # self.current_directory = f"{Path.cwd()}/../book.db"
         self.current_directory = f"{Path.cwd()}/book.db"
 
         self.resize(800, 600)
         self.setWindowTitle("纸间书摘 PC 书评导入")
+        self.setWindowIcon(QIcon("assets/favicon.png"))
+
         self.ip = ""
         # 隐藏标题栏
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -30,11 +34,11 @@ class MainWindow(QMainWindow):
         toolbar = QToolBar()
         toolbar.setMovable(False)
 
-        self.btn_home = QPushButton(icon=QIcon("assets/home.svg"))
+        self.btn_home = QPushButton(text="", icon=QIcon("assets/home.svg"))
         self.btn_home.clicked.connect(lambda: self.initialize_ui())
-        self.btn_author = QPushButton(icon=QIcon("assets/author.svg"))
+        self.btn_author = QPushButton(text="", icon=QIcon("assets/author.svg"))
         self.btn_author.clicked.connect(lambda: self.author_interface())
-        self.btn_settings = QPushButton(icon=QIcon("assets/settings.svg"))
+        self.btn_settings = QPushButton(text="", icon=QIcon("assets/settings.svg"))
         self.btn_home.setFlat(True)
         self.btn_author.setFlat(True)
         self.btn_settings.setFlat(True)
@@ -45,11 +49,19 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.btn_home)
         layout.addWidget(self.btn_author)
         layout.addWidget(self.btn_settings)
+
+        self.now_ui = QLabel("主页")
+        self.now_ui.setStyleSheet("color:green;font-size:24pt")
+        self.now_ip = QLabel(f"当前ip：{self.ip}")
+
+        layout.addWidget(self.now_ui)
+        layout.addStretch()
+        layout.addWidget(self.now_ip)
         layout.addStretch()
 
-        self.btn_min = QPushButton(icon=QIcon("assets/min.svg"))
-        self.btn_max = QPushButton(icon=QIcon("assets/max-normal.svg"))
-        btn_close = QPushButton(icon=QIcon("assets/close.svg"))
+        self.btn_min = QPushButton(text="", icon=QIcon("assets/min.svg"))
+        self.btn_max = QPushButton(text="", icon=QIcon("assets/max-normal.svg"))
+        btn_close = QPushButton(text="", icon=QIcon("assets/close.svg"))
 
         self.btn_min.setFlat(True)
         self.btn_max.setFlat(True)
@@ -70,60 +82,9 @@ class MainWindow(QMainWindow):
 
         self.initialize_ui()
 
-    def author_interface(self):
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
-
-        layout.addWidget(QLabel(f"<span style='font-size:24pt'>作者简介</span>"))
-        label_0 = QLabel(
-            "Hello ，这里是<a href='https://childeyouyu.github.io/'>公子有语</a>，语书摘的开发者。"
-        )
-        label_0.setOpenExternalLinks(True)
-        layout.addWidget(label_0)
-        label_1 = QLabel(
-            "语书摘是一款专门为纸间书摘开发的第三方app，用于在Windows上进行书摘记录，并提供通过api导入到手机功能的程序。"
-        )
-        label_1.setWordWrap(True)
-        layout.addWidget(label_1)
-        layout.addWidget(QLabel("本程序使用 Python、PySide6开发而成。"))
-
-        label_2 = QLabel(
-            "如果程序对你有帮助，欢迎您的捐助或 <a href='https://github.com/childeyouyu/merpyzf_pyside6'>Star</a>"
-        )
-        label_2.setOpenExternalLinks(True)
-        layout.addWidget(label_2)
-
-        label_3 = QLabel()
-        pixmap = QPixmap("assets/公子有语.png")
-        # 缩放图片到新的尺寸
-        scaled_pixmap = pixmap.scaled(
-            300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
-        )  # 设置新的尺寸为100x100
-        label_3.setPixmap(scaled_pixmap)
-        label_3.setAlignment(Qt.AlignCenter)
-        layout.addWidget(label_3)
-
-        self.setCentralWidget(widget)
-
-    def window_max(self):
-        if self.isMaximized():
-            self.showNormal()
-            self.btn_max.setIcon(QIcon("assets/max-normal.svg"))
-        else:
-            self.showMaximized()
-            self.btn_max.setIcon(QIcon("assets/max-max.svg"))
-
-        self.btn_max.clearFocus()
-
-    def move_title_bar(self, event):
-        """
-        拖动顶部标题条
-        :param event:
-        :return:
-        """
-        self.windowHandle().startSystemMove()
-
     def initialize_ui(self):
+        self.now_ip.setText(f"当前ip：{self.ip}")
+        self.now_ui.setText("主页")
         self.back = QWidget()
         self.setCentralWidget(self.back)
         self.layout = QVBoxLayout()
@@ -168,12 +129,12 @@ class MainWindow(QMainWindow):
 
             book_name.clicked.connect(lambda _, x=book[1]: self.open_book_note(x))
 
-            remove_book = QPushButton(icon=QIcon("assets/remove.svg"))
+            remove_book = QPushButton(text="", icon=QIcon("assets/remove.svg"))
             remove_book.setFlat(True)
             remove_book.clicked.connect(lambda _, x=book[1]: self.ok_ok(x))
 
             layout_book.addWidget(book_name, 1)
-            layout_book.addWidget(remove_book, 0, Qt.AlignmentFlag.AlignRight)
+            layout_book.addWidget(remove_book, 0)
 
             bw_layout.addWidget(widget_book)
 
@@ -182,17 +143,56 @@ class MainWindow(QMainWindow):
 
         self.layout.addStretch()
         open_write_info = QPushButton("记录新书")
-        open_write_info.clicked.connect(lambda: self.open_write_info())
+        open_write_info.clicked.connect(lambda: self.add_new_book())
         self.layout.addWidget(open_write_info)
 
-    def open_write_info(self):
+    def author_interface(self):
+        self.now_ui.setText("作者信息")
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
 
+        layout.addWidget(QLabel(f"<span style='font-size:24pt'>作者简介</span>"))
+        label_0 = QLabel(
+            "Hello ，这里是<a href='https://childeyouyu.github.io/'>公子有语</a>，语书摘的开发者。"
+        )
+        label_0.setOpenExternalLinks(True)
+        layout.addWidget(label_0)
+        label_1 = QLabel(
+            "语书摘是一款专门为纸间书摘开发的第三方app，用于在Windows上进行书摘记录，并提供通过api导入到手机功能的程序。"
+        )
+        label_1.setWordWrap(True)
+        layout.addWidget(label_1)
+        layout.addWidget(QLabel("本程序使用 Python、PySide6开发而成。"))
+
+        label_2 = QLabel(
+            "如果程序对你有帮助，欢迎您的捐助或 <a href='https://github.com/childeyouyu/merpyzf_pyside6'>Star</a>"
+        )
+        label_2.setOpenExternalLinks(True)
+        layout.addWidget(label_2)
+
+        label_3 = QLabel()
+        pixmap = QPixmap("assets/公子有语.png")
+        # 缩放图片到新的尺寸
+        scaled_pixmap = pixmap.scaled(
+            300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+        )  # 设置新的尺寸为100x100
+        label_3.setPixmap(scaled_pixmap)
+        label_3.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label_3)
+
+        self.setCentralWidget(widget)
+
+    def add_new_book(self):
+
+        # 顶部的修改ip按钮
         ip_new_and_return_button = self.ip_new_and_return_button()
         widget = QWidget()
         layout = QVBoxLayout(widget)
 
         layout.addWidget(ip_new_and_return_button[1])
+        # 书籍信息填写界面
         layout.addWidget(MyWidget())
+
         self.setCentralWidget(widget)
         ip_new_and_return_button[0].setFocus()
 
@@ -238,6 +238,24 @@ class MainWindow(QMainWindow):
 
         self.dlg.exec()
 
+    def window_max(self):
+        if self.isMaximized():
+            self.showNormal()
+            self.btn_max.setIcon(QIcon("assets/max-normal.svg"))
+        else:
+            self.showMaximized()
+            self.btn_max.setIcon(QIcon("assets/max-max.svg"))
+
+        self.btn_max.clearFocus()
+
+    def move_title_bar(self, event):
+        """
+        拖动顶部标题条
+        :param event:
+        :return:
+        """
+        self.windowHandle().startSystemMove()
+
     def remove_book(self, book_name):
         conn = sqlite3.connect(self.current_directory)
         c = conn.cursor()
@@ -253,6 +271,8 @@ class MainWindow(QMainWindow):
         layout = QFormLayout(widget)
 
         submit_note_or_not_checkbox = QCheckBox("同时提交书摘到纸间书摘")
+        layout.addWidget(submit_note_or_not_checkbox)
+
         text = QTextEdit(text)
         note = QTextEdit(note)
         layout.addRow(QLabel("原文"), text)
@@ -262,7 +282,21 @@ class MainWindow(QMainWindow):
         h_widget_layout = QHBoxLayout(h_widget)
 
         btn_add_return = QPushButton("提交并返回")
+        btn_add_return.clicked.connect(
+            lambda: self.btn_add_note(
+                book_name, text.toPlainText(), note.toPlainText(), True
+            )
+        )
+
         btn_add_just = QPushButton("提交但不返回")
+
+        btn_add_just.clicked.connect(
+            lambda: self.btn_add_note(
+                book_name,
+                text.toPlainText(),
+                note.toPlainText(),
+            )
+        )
 
         h_widget_layout.addWidget(btn_add_return)
         h_widget_layout.addWidget(btn_add_just)
@@ -271,17 +305,22 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
 
+    def btn_add_note(self, book_name, text="", note="", state=False):
+        if text == "" and note == "":
+            # 如果没有书摘，就不要记录
+            return
+        self.read_write_date.get_book_id(book_name)
+        self.read_write_date.insert_note(text, note)
+        if state:
+            self.initialize_ui()
+
     def open_book_note(self, book_name):
-        select_note_sql = f"SELECT * FROM {book_name}"
-        conn = sqlite3.connect(self.current_directory)
         # [(1, '话说天下大势，分久必合合久必分。', '开篇立意，表明全书主旨。', 'no_send', '2024-11-04 21:01:04'),
         #  (2, '话说天下大势，分久必合合久必分。', '开篇立意，表明全书主旨。', 'no_send', '2024-11-04 21:02:53'),
         #  (3, '最终三国归晋，这天下又回归一统。', '回应开头的分久必合合久必分。', 'no_send', '2024-11-04 21:14:54')]
-        c = conn.cursor()
-        c.execute(select_note_sql)
-        note_list = c.fetchall()
-        print(c.fetchall())
-        conn.close()
+        self.read_write_date.get_book_id(book_name)
+        note_list = self.read_write_date.get_note_list()
+        self.book_name = book_name
 
         widget_all = QWidget()  # 最大的整块，里面放一个列布局
         layout = QVBoxLayout(widget_all)
@@ -324,10 +363,6 @@ class MainWindow(QMainWindow):
 
         # for r in range(15):
         for i in note_list:
-            # zw = QLabel(
-            #     "111111111111111111111111111111111111111111111111111111111111111111"
-            #     "11111111111111111111111111111可能1111111111111111111111111111111111111"
-            # )
             text = QLabel(i[1])
             note = QLabel(i[2])
             # layout_area.addWidget(zw)
@@ -373,6 +408,7 @@ class MainWindow(QMainWindow):
             lambda _, x=book_name: self.add_note_interface(x)
         )
         submit_to_phone_button = QPushButton("提交到手机")
+        submit_to_phone_button.clicked.connect(lambda: self.submit_to_phone())
 
         layout_right.addWidget(write_note_button)
         layout_right.addWidget(submit_to_phone_button)
@@ -385,3 +421,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget_all)
         widget_first[0].setFocus()
         ...
+
+    def submit_to_phone(self):
+        # 获取书摘列表
+        book_name = self.book_name
+        self.read_write_date.get_book_id(book_name)
+        no_send_notes = self.read_write_date.get_notes()
+        for note in no_send_notes:
+            line = [note[1], note[2]]
+            print(self.ip)
+            post_to_merpyzf(line, book_name, self.ip)
+
+        pass
