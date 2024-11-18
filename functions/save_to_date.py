@@ -131,3 +131,28 @@ class ReadAndWriteDate:
         # [(1, 'xn的测试', '', 'no_send', '2024-11-17 21:30:00'), (2, '', '', 'no_send', '2024-11-17 21:32:46')]
 
         return notes
+
+    def rm_note(self, text, note):
+        print("我要发一些东西", text, note)
+        sql_rm_note = f"delete from {self.form_name} where text=? and note=?"
+
+        self.c.execute(sql_rm_note, (text, note))
+        self.conn.commit()
+
+    def update_note(
+        self, old_text=None, old_note=None, new_text=None, new_note=None, state=None
+    ):
+
+        if new_text == "":
+            new_text = old_text
+        if new_note == "":
+            new_note = old_note
+        if not state:
+            state = "no_send"
+        sql_update_note = (
+            f"update {self.form_name} set text=?,note=?,note_state=?"
+            f"where text=? and note=?"
+        )
+
+        self.c.execute(sql_update_note, (new_text, new_note, state, old_text, old_note))
+        self.conn.commit()

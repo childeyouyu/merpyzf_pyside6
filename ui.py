@@ -197,7 +197,10 @@ class MainWindow(QMainWindow):
         ip_new_and_return_button[0].setFocus()
 
     def ip_new_and_return_button(self):
-        self.ip = self.ip_text.text()
+        try:
+            self.ip = self.ip_text.text()
+        except Exception as e:
+            print(e)
         widget = QWidget()
         layout = QHBoxLayout(widget)
 
@@ -388,6 +391,10 @@ class MainWindow(QMainWindow):
 
             change_note_btn = QPushButton("修改书摘")
             remove_note_btn = QPushButton(icon=QIcon("assets/remove.svg"))  # 删除书摘
+
+            remove_note_btn.clicked.connect(
+                lambda _, t=i[1], n=i[2]: self.rm_note(t, n)
+            )
             # remove_note_btn.setFlat(True)
 
             layout_control_book.addWidget(change_note_btn)
@@ -422,14 +429,32 @@ class MainWindow(QMainWindow):
         widget_first[0].setFocus()
         ...
 
+    def rm_note(self, text, note):
+        print(text, note)
+        self.read_write_date.get_book_id(self.book_name)
+        self.read_write_date.rm_note(text, note)
+        self.open_book_note(self.book_name)
+
+    def update_note(self):
+        for note in self.read_write_date.get_notes():
+            self.read_write_date.update_note(
+                old_text=note[1], old_note=note[2], state="have_send"
+            )
+        ...
+
     def submit_to_phone(self):
         # 获取书摘列表
         book_name = self.book_name
         self.read_write_date.get_book_id(book_name)
         no_send_notes = self.read_write_date.get_notes()
+        note_list: list = []
         for note in no_send_notes:
             line = [note[1], note[2]]
+
+            if note[3] == "no_send":
+                note_list.append({"text": note[1], "note": note[2]})
             print(self.ip)
-            post_to_merpyzf(line, book_name, self.ip)
+        post_to_merpyzf(note_list, book_name, self.ip)
+        self.update_note()
 
         pass
