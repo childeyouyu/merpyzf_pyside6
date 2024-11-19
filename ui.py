@@ -14,7 +14,10 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.toolbar = None
         self.read_write_date = ReadAndWriteDate()
+        self.settings = self.read_write_date.get_settings()
+
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setBlurRadius(15)
         self.shadow.setColor(QColor(0, 0, 0, 150))
@@ -26,10 +29,17 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("纸间书摘 PC 书评导入")
         self.setWindowIcon(QIcon("assets/favicon.png"))
 
-        self.ip = ""
+        self.ip = self.settings[0][1]
+        print(self.ip)
         # 隐藏标题栏
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
 
+        self.initialize_toolbar()
+
+        self.initialize_ui()
+
+    def initialize_toolbar(self):
+        self.removeToolBar(self.toolbar)
         # 设置自定义标题栏
         toolbar = QToolBar()
         toolbar.setMovable(False)
@@ -39,6 +49,7 @@ class MainWindow(QMainWindow):
         self.btn_author = QPushButton(text="", icon=QIcon("assets/author.svg"))
         self.btn_author.clicked.connect(lambda: self.author_interface())
         self.btn_settings = QPushButton(text="", icon=QIcon("assets/settings.svg"))
+        self.btn_settings.clicked.connect(lambda: self.interface_settings())
         self.btn_home.setFlat(True)
         self.btn_author.setFlat(True)
         self.btn_settings.setFlat(True)
@@ -47,7 +58,8 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(widget_filling)
         layout = QHBoxLayout(widget_filling)
         layout.addWidget(self.btn_home)
-        layout.addWidget(self.btn_author)
+        if self.settings[1][1] == "show":
+            layout.addWidget(self.btn_author)
         layout.addWidget(self.btn_settings)
 
         self.now_ui = QLabel("主页")
@@ -79,10 +91,11 @@ class MainWindow(QMainWindow):
 
         self.addToolBar(toolbar)
         toolbar.mouseMoveEvent = self.move_title_bar
-
-        self.initialize_ui()
+        self.toolbar = toolbar
 
     def initialize_ui(self):
+        ip_new_and_return_button = self.ip_new_and_return_button()
+
         self.now_ip.setText(f"当前ip：{self.ip}")
         self.now_ui.setText("主页")
         self.back = QWidget()
@@ -98,7 +111,7 @@ class MainWindow(QMainWindow):
         form = QFormLayout()
         w.setLayout(form)
 
-        form.addRow(QLabel("ip地址"), self.ip_text)
+        self.layout.addWidget(ip_new_and_return_button[1])
 
         self.layout.addWidget(w)
         # 上面的是第一行，ip地址，下面写的是已经填写过的书，储存在一个数据库中，可以删除
@@ -127,7 +140,7 @@ class MainWindow(QMainWindow):
             layout_book = QHBoxLayout(widget_book)
             book_name = QPushButton(f"{book[1]}")
 
-            book_name.clicked.connect(lambda _, x=book[1]: self.open_book_note(x))
+            book_name.clicked.connect(lambda _, x=book[1]: self.interface_book_note(x))
 
             remove_book = QPushButton(text="", icon=QIcon("assets/remove.svg"))
             remove_book.setFlat(True)
@@ -143,10 +156,12 @@ class MainWindow(QMainWindow):
 
         self.layout.addStretch()
         open_write_info = QPushButton("记录新书")
-        open_write_info.clicked.connect(lambda: self.add_new_book())
+        open_write_info.clicked.connect(lambda: self.interface_add_new_book())
         self.layout.addWidget(open_write_info)
+        ip_new_and_return_button[0].setFocus()
 
     def author_interface(self):
+
         self.now_ui.setText("作者信息")
         widget = QWidget()
         layout = QVBoxLayout(widget)
@@ -182,7 +197,8 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
 
-    def add_new_book(self):
+    def interface_add_new_book(self):
+        self.now_ui.setText("增加新书")
 
         # 顶部的修改ip按钮
         ip_new_and_return_button = self.ip_new_and_return_button()
@@ -207,11 +223,12 @@ class MainWindow(QMainWindow):
         ip_line = QLineEdit()
         ip_line.setText(f"{self.ip}")
         change_ip_button = QPushButton("修改 ip")
-        return_button = QPushButton(f"返回菜单   当前 ip：{self.ip}")
+        return_button = QPushButton(f"返回菜单")
 
         def ip_change():
             self.ip = ip_line.text()
-            return_button.setText(f"返回菜单   当前 ip：{self.ip}")
+            self.read_write_date.save_ip(self.ip)
+            self.now_ip.setText("当前ip：" + self.ip)
 
         change_ip_button.clicked.connect(lambda: ip_change())
 
@@ -269,7 +286,8 @@ class MainWindow(QMainWindow):
         self.dlg.close()
         print(book_name)
 
-    def add_note_interface(self, book_name, text="", note=""):
+    def interface_add_note_interface(self, book_name, text="", note=""):
+        self.now_ui.setText("增加书摘")
         widget = QWidget()
         layout = QFormLayout(widget)
 
@@ -317,10 +335,11 @@ class MainWindow(QMainWindow):
         if state:
             self.initialize_ui()
 
-    def open_book_note(self, book_name):
+    def interface_book_note(self, book_name):
         # [(1, '话说天下大势，分久必合合久必分。', '开篇立意，表明全书主旨。', 'no_send', '2024-11-04 21:01:04'),
         #  (2, '话说天下大势，分久必合合久必分。', '开篇立意，表明全书主旨。', 'no_send', '2024-11-04 21:02:53'),
         #  (3, '最终三国归晋，这天下又回归一统。', '回应开头的分久必合合久必分。', 'no_send', '2024-11-04 21:14:54')]
+        self.now_ui.setText(book_name)
         self.read_write_date.get_book_id(book_name)
         note_list = self.read_write_date.get_note_list()
         self.book_name = book_name
@@ -332,13 +351,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(widget_first[1])
 
         # 第二行：书名，字体大一点右侧加按钮
-        book_name_label = QLabel(
-            f"<span style='font-size:16pt'>{book_name}</span>"
-            # f"<span style='font-size:16pt; color:#FF0000;'>{book_name}</span>"
-        )
-        book_name_label.setWordWrap(True)
-        book_name_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(book_name_label)
+        # book_name_label = QLabel(
+        #     f"<span style='font-size:16pt'>{book_name}</span>"
+        #     # f"<span style='font-size:16pt; color:#FF0000;'>{book_name}</span>"
+        # )
+        # book_name_label.setWordWrap(True)
+        # book_name_label.setAlignment(Qt.AlignCenter)
+        # layout.addWidget(book_name_label)
         # book_name_label.setStyleSheet("QLabel { color: red; background-color: green; }")
 
         # 第三行，显示书摘
@@ -391,6 +410,11 @@ class MainWindow(QMainWindow):
 
             change_note_btn = QPushButton("修改书摘")
             remove_note_btn = QPushButton(icon=QIcon("assets/remove.svg"))  # 删除书摘
+            change_note_btn.clicked.connect(
+                lambda _, t=i[1], n=i[2]: self.interface_add_note_interface(
+                    self.book_name, t, n
+                )
+            )
 
             remove_note_btn.clicked.connect(
                 lambda _, t=i[1], n=i[2]: self.rm_note(t, n)
@@ -412,7 +436,7 @@ class MainWindow(QMainWindow):
         layout_right = QVBoxLayout(widget_right)
         write_note_button = QPushButton("增加书摘")
         write_note_button.clicked.connect(
-            lambda _, x=book_name: self.add_note_interface(x)
+            lambda _, x=book_name: self.interface_add_note_interface(x)
         )
         submit_to_phone_button = QPushButton("提交到手机")
         submit_to_phone_button.clicked.connect(lambda: self.submit_to_phone())
@@ -433,7 +457,7 @@ class MainWindow(QMainWindow):
         print(text, note)
         self.read_write_date.get_book_id(self.book_name)
         self.read_write_date.rm_note(text, note)
-        self.open_book_note(self.book_name)
+        self.interface_book_note(self.book_name)
 
     def update_note(self):
         for note in self.read_write_date.get_notes():
@@ -449,12 +473,37 @@ class MainWindow(QMainWindow):
         no_send_notes = self.read_write_date.get_notes()
         note_list: list = []
         for note in no_send_notes:
-            line = [note[1], note[2]]
-
+            # line = [note[1], note[2]]
             if note[3] == "no_send":
                 note_list.append({"text": note[1], "note": note[2]})
-            print(self.ip)
+            # print(self.ip)
         post_to_merpyzf(note_list, book_name, self.ip)
         self.update_note()
 
-        pass
+    def interface_settings(self):
+        widget = QWidget()
+        layout = QFormLayout(widget)
+
+        def on_state_changed():
+            if checkbox_author.isChecked():
+                self.read_write_date.update_settings(author_info="show")
+                checkbox_author.setText("已显示")
+            else:
+                self.read_write_date.update_settings(author_info="hide")
+                checkbox_author.setText("已隐藏")
+            self.settings = self.read_write_date.get_settings()
+            self.initialize_toolbar()
+
+        if self.settings[1][1] == "show":
+            checkbox_author = QCheckBox(
+                "已显示",
+            )
+            checkbox_author.setChecked(True)
+        else:
+            checkbox_author = QCheckBox("已隐藏")
+            checkbox_author.setChecked(False)
+
+        checkbox_author.stateChanged.connect(on_state_changed)
+        layout.addRow(QLabel("显示开发者信息页面"), checkbox_author)
+
+        self.setCentralWidget(widget)

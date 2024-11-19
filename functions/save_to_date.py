@@ -156,3 +156,29 @@ class ReadAndWriteDate:
 
         self.c.execute(sql_update_note, (new_text, new_note, state, old_text, old_note))
         self.conn.commit()
+
+    def get_settings(self):
+        sql_get_last_ip = "select * from settings"
+        # [('last_ip', '192.168.1.12'), ('author_info', 'true')]
+        settings = self.c.execute(sql_get_last_ip).fetchall()
+        return settings
+
+    def save_ip(self, new_ip):
+        sql_save_ip = (
+            f"update settings set setting_value=? where setting_name='last_ip'"
+        )
+
+        self.c.execute(sql_save_ip, (str(new_ip),))
+        self.conn.commit()
+
+    def update_settings(self, new_ip=None, author_info=None):
+        if new_ip:
+            sql = f"update settings set setting_value=? where setting_name='last_ip'"
+            self.c.execute(sql, (new_ip,))
+            self.conn.commit()
+        if author_info:
+            sql = (
+                f"update settings set setting_value=? where setting_name='author_info'"
+            )
+            self.c.execute(sql, (author_info,))
+            self.conn.commit()
