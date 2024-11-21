@@ -107,6 +107,7 @@ class ReadAndWriteDate:
             print(f"{note} 插入成功")
         else:
             print("这个笔记已经记录过了。")
+            return "have_note"
 
     def get_note_list(self):
         sql_select_note = f"SELECT * FROM {self.form_name}"
@@ -143,17 +144,17 @@ class ReadAndWriteDate:
         self, old_text=None, old_note=None, new_text=None, new_note=None, state=None
     ):
 
-        if new_text == "":
+        if new_text is None:
             new_text = old_text
-        if new_note == "":
+        if new_note is None:
             new_note = old_note
-        if not state:
+        if state is None:
             state = "no_send"
         sql_update_note = (
             f"update {self.form_name} set text=?,note=?,note_state=?"
             f"where text=? and note=?"
         )
-
+        print(old_text, old_note)
         self.c.execute(sql_update_note, (new_text, new_note, state, old_text, old_note))
         self.conn.commit()
 
@@ -171,14 +172,22 @@ class ReadAndWriteDate:
         self.c.execute(sql_save_ip, (str(new_ip),))
         self.conn.commit()
 
-    def update_settings(self, new_ip=None, author_info=None):
+    def update_settings(self, new_ip=None, author_info=None, submit_state=None):
         if new_ip:
             sql = f"update settings set setting_value=? where setting_name='last_ip'"
-            self.c.execute(sql, (new_ip,))
-            self.conn.commit()
-        if author_info:
+            parameters = new_ip
+
+        elif author_info:
             sql = (
                 f"update settings set setting_value=? where setting_name='author_info'"
             )
-            self.c.execute(sql, (author_info,))
-            self.conn.commit()
+            parameters = author_info
+        elif submit_state:
+            sql = (
+                f"update settings set setting_value=? where setting_name='submit_state'"
+            )
+            parameters = submit_state
+        else:
+            return
+        self.c.execute(sql, (parameters,))
+        self.conn.commit()

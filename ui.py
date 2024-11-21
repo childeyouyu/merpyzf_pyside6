@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         self.btn_home = QPushButton(text="", icon=QIcon("assets/home.svg"))
         self.btn_home.clicked.connect(lambda: self.initialize_ui())
         self.btn_author = QPushButton(text="", icon=QIcon("assets/author.svg"))
-        self.btn_author.clicked.connect(lambda: self.author_interface())
+        self.btn_author.clicked.connect(lambda: self.interface_author())
         self.btn_settings = QPushButton(text="", icon=QIcon("assets/settings.svg"))
         self.btn_settings.clicked.connect(lambda: self.interface_settings())
         self.btn_home.setFlat(True)
@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
             layout.addWidget(self.btn_author)
         layout.addWidget(self.btn_settings)
 
-        self.now_ui = QLabel("主页")
+        self.now_ui = QLabel()
         self.now_ui.setStyleSheet("color:green;font-size:24pt")
         self.now_ip = QLabel(f"当前ip：{self.ip}")
 
@@ -160,9 +160,12 @@ class MainWindow(QMainWindow):
         self.layout.addWidget(open_write_info)
         ip_new_and_return_button[0].setFocus()
 
-    def author_interface(self):
+    def interface_author(self):
 
         self.now_ui.setText("作者信息")
+
+        area = QScrollArea()
+        area.setWidgetResizable(True)
         widget = QWidget()
         layout = QVBoxLayout(widget)
 
@@ -180,7 +183,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(QLabel("本程序使用 Python、PySide6开发而成。"))
 
         label_2 = QLabel(
-            "如果程序对你有帮助，欢迎您的捐助或 <a href='https://github.com/childeyouyu/merpyzf_pyside6'>Star</a>"
+            "如果程序对你有帮助，欢迎您的捐助或 <a href='https://github.com/childeyouyu/merpyzf_pyside6'>Star</a>。"
         )
         label_2.setOpenExternalLinks(True)
         layout.addWidget(label_2)
@@ -195,7 +198,16 @@ class MainWindow(QMainWindow):
         label_3.setAlignment(Qt.AlignCenter)
         layout.addWidget(label_3)
 
-        self.setCentralWidget(widget)
+        label_4 = QLabel(
+            f"<span style='font-size:24pt'>特别感谢</span>"
+            "<p style='font-size:16pt' ><a href='https://xmnote.gitbook.io/zhi-jian-shu-zhai'>@春水碧于天</a></p>"
+            "<p style='font-size:16pt' ><a href='https://pypi.org/project/PySide6/'>@PySide6</a></p>"
+        )
+        label_4.setOpenExternalLinks(True)
+        layout.addWidget(label_4)
+        area.setWidget(widget)
+
+        self.setCentralWidget(area)
 
     def interface_add_new_book(self):
         self.now_ui.setText("增加新书")
@@ -213,10 +225,7 @@ class MainWindow(QMainWindow):
         ip_new_and_return_button[0].setFocus()
 
     def ip_new_and_return_button(self):
-        try:
-            self.ip = self.ip_text.text()
-        except Exception as e:
-            print(e)
+
         widget = QWidget()
         layout = QHBoxLayout(widget)
 
@@ -286,7 +295,7 @@ class MainWindow(QMainWindow):
         self.dlg.close()
         print(book_name)
 
-    def interface_add_note_interface(self, book_name, text="", note=""):
+    def interface_add_note_interface(self, book_name, old_text=None, old_note=None):
         self.now_ui.setText("增加书摘")
         widget = QWidget()
         layout = QFormLayout(widget)
@@ -294,8 +303,8 @@ class MainWindow(QMainWindow):
         submit_note_or_not_checkbox = QCheckBox("同时提交书摘到纸间书摘")
         layout.addWidget(submit_note_or_not_checkbox)
 
-        text = QTextEdit(text)
-        note = QTextEdit(note)
+        text = QTextEdit(old_text)
+        note = QTextEdit(old_note)
         layout.addRow(QLabel("原文"), text)
         layout.addRow(QLabel("想法"), note)
 
@@ -305,7 +314,12 @@ class MainWindow(QMainWindow):
         btn_add_return = QPushButton("提交并返回")
         btn_add_return.clicked.connect(
             lambda: self.btn_add_note(
-                book_name, text.toPlainText(), note.toPlainText(), True
+                book_name,
+                old_text=old_text,
+                old_note=old_note,
+                new_text=text.toPlainText(),
+                new_note=note.toPlainText(),
+                state=True,
             )
         )
 
@@ -314,8 +328,10 @@ class MainWindow(QMainWindow):
         btn_add_just.clicked.connect(
             lambda: self.btn_add_note(
                 book_name,
-                text.toPlainText(),
-                note.toPlainText(),
+                old_text=old_text,
+                old_note=old_note,
+                new_text=text.toPlainText(),
+                new_note=note.toPlainText(),
             )
         )
 
@@ -326,12 +342,30 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
 
-    def btn_add_note(self, book_name, text="", note="", state=False):
-        if text == "" and note == "":
+    def btn_add_note(
+        self,
+        book_name,
+        old_text=None,
+        old_note=None,
+        new_text="",
+        new_note="",
+        state=False,
+    ):
+        print(1, str(old_text), old_note)
+        if new_text == "" and new_note == "":
             # 如果没有书摘，就不要记录
             return
         self.read_write_date.get_book_id(book_name)
-        self.read_write_date.insert_note(text, note)
+        if old_note is None:
+            self.read_write_date.insert_note(new_text, new_note)
+        else:
+            self.read_write_date.update_note(
+                old_text=old_text,
+                old_note=old_note,
+                new_text=new_text,
+                new_note=new_note,
+            )
+
         if state:
             self.initialize_ui()
 
@@ -350,43 +384,21 @@ class MainWindow(QMainWindow):
         widget_first = self.ip_new_and_return_button()
         layout.addWidget(widget_first[1])
 
-        # 第二行：书名，字体大一点右侧加按钮
-        # book_name_label = QLabel(
-        #     f"<span style='font-size:16pt'>{book_name}</span>"
-        #     # f"<span style='font-size:16pt; color:#FF0000;'>{book_name}</span>"
-        # )
-        # book_name_label.setWordWrap(True)
-        # book_name_label.setAlignment(Qt.AlignCenter)
-        # layout.addWidget(book_name_label)
-        # book_name_label.setStyleSheet("QLabel { color: red; background-color: green; }")
-
-        # 第三行，显示书摘
-        # widget_second = QWidget()
-        # layout_second = QHBoxLayout(widget_second)
-
         # 左侧：滚动的列布局，居中显示，里面放很多的小widget，内容是：原文+书摘，
         area = QScrollArea()
         widget_area = QWidget()
         # widget_area.setStyleSheet("background-color: rgb(255, 255, 255);")
         area.setWidgetResizable(True)
-        # area.setStyleSheet("background-color: rgb(255, 255, 255);")
-        # area.setWidget(widget_area)
-        # widget_right = QWidget()
-        # layout_second.addWidget(widget_left)
-        # layout_second.addWidget(widget_right)
+
         layout_area = QVBoxLayout(widget_area)
         layout_area.addStretch(1)
-        # layout.addLayout(layout_area)
-        # layout_row = QHBoxLayout(widget_left)
-        # layout_row.setStretch(0, 1)
 
-        # widget_child = QWidget()
-        # layout_area = QVBoxLayout(widget_child)
-
-        # for r in range(15):
         for i in note_list:
             text = QLabel(i[1])
             note = QLabel(i[2])
+            if i[3] == "have_send" and self.settings[2][1] == "show":
+                text.setStyleSheet("color: red; background-color: green;")
+                note.setStyleSheet("color: red; background-color: green;")
             # layout_area.addWidget(zw)
             layout_area.addWidget(
                 text
@@ -481,6 +493,7 @@ class MainWindow(QMainWindow):
         self.update_note()
 
     def interface_settings(self):
+        self.now_ui.setText("设置")
         widget = QWidget()
         layout = QFormLayout(widget)
 
@@ -493,6 +506,7 @@ class MainWindow(QMainWindow):
                 checkbox_author.setText("已隐藏")
             self.settings = self.read_write_date.get_settings()
             self.initialize_toolbar()
+            self.now_ui.setText("设置")
 
         if self.settings[1][1] == "show":
             checkbox_author = QCheckBox(
@@ -506,4 +520,25 @@ class MainWindow(QMainWindow):
         checkbox_author.stateChanged.connect(on_state_changed)
         layout.addRow(QLabel("显示开发者信息页面"), checkbox_author)
 
+        def on_submit_state_changed():
+            if checkbox_submit_state.isChecked():
+                self.read_write_date.update_settings(submit_state="show")
+                checkbox_submit_state.setText("已显示")
+            else:
+                self.read_write_date.update_settings(submit_state="hide")
+                checkbox_submit_state.setText("已隐藏")
+            self.settings = self.read_write_date.get_settings()
+            self.initialize_toolbar()
+            self.now_ui.setText("设置")
+
+        # 显示书摘提交状态
+        if self.settings[2][1] == "show":
+            checkbox_submit_state = QCheckBox("已显示")
+            checkbox_submit_state.setChecked(True)
+        else:
+            checkbox_submit_state = QCheckBox("已隐藏")
+            checkbox_submit_state.setChecked(False)
+
+        checkbox_submit_state.stateChanged.connect(on_submit_state_changed)
+        layout.addRow(QLabel("显示书摘是否上传到纸间书摘"), checkbox_submit_state)
         self.setCentralWidget(widget)
