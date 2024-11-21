@@ -94,6 +94,8 @@ class MainWindow(QMainWindow):
         self.toolbar = toolbar
 
     def initialize_ui(self):
+        self.submit_phone = False
+
         ip_new_and_return_button = self.ip_new_and_return_button()
 
         self.now_ip.setText(f"当前ip：{self.ip}")
@@ -299,8 +301,21 @@ class MainWindow(QMainWindow):
         self.now_ui.setText("增加书摘")
         widget = QWidget()
         layout = QFormLayout(widget)
+        self.submit_phone = False
+
+        def on_state_changed():
+            if submit_note_or_not_checkbox.isChecked():
+                self.submit_phone = True
+            else:
+                self.submit_phone = False
+
+                self.read_write_date.update_settings(author_info="hide")
+            self.settings = self.read_write_date.get_settings()
+            self.initialize_toolbar()
+            self.now_ui.setText("设置")
 
         submit_note_or_not_checkbox = QCheckBox("同时提交书摘到纸间书摘")
+        submit_note_or_not_checkbox.stateChanged.connect(on_state_changed)
         layout.addWidget(submit_note_or_not_checkbox)
 
         text = QTextEdit(old_text)
@@ -312,6 +327,7 @@ class MainWindow(QMainWindow):
         h_widget_layout = QHBoxLayout(h_widget)
 
         btn_add_return = QPushButton("提交并返回")
+
         btn_add_return.clicked.connect(
             lambda: self.btn_add_note(
                 book_name,
@@ -351,6 +367,7 @@ class MainWindow(QMainWindow):
         new_note="",
         state=False,
     ):
+
         print(1, str(old_text), old_note)
         if new_text == "" and new_note == "":
             # 如果没有书摘，就不要记录
@@ -365,7 +382,10 @@ class MainWindow(QMainWindow):
                 new_text=new_text,
                 new_note=new_note,
             )
-
+        if self.submit_phone:
+            post_to_merpyzf(
+                [{"text": new_text, "note": new_note}], self.book_name, self.ip
+            )
         if state:
             self.initialize_ui()
 
