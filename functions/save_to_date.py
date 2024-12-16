@@ -8,6 +8,9 @@ class ReadAndWriteDate:
         self.conn = sqlite3.connect("book.db")
         self.c = self.conn.cursor()
 
+        self.settings_conn = sqlite3.connect("settings.db")
+        self.c_settings = self.settings_conn.cursor()
+
     def save_book(
         self,
         name,
@@ -161,7 +164,7 @@ class ReadAndWriteDate:
     def get_settings(self):
         sql_get_last_ip = "select * from settings"
         # [('last_ip', '192.168.1.12'), ('author_info', 'true')]
-        settings = self.c.execute(sql_get_last_ip).fetchall()
+        settings = self.c_settings.execute(sql_get_last_ip).fetchall()
         return settings
 
     def save_ip(self, new_ip):
@@ -169,10 +172,12 @@ class ReadAndWriteDate:
             f"update settings set setting_value=? where setting_name='last_ip'"
         )
 
-        self.c.execute(sql_save_ip, (str(new_ip),))
-        self.conn.commit()
+        self.c_settings.execute(sql_save_ip, (str(new_ip),))
+        self.settings_conn.commit()
 
-    def update_settings(self, new_ip=None, author_info=None, submit_state=None):
+    def update_settings(self, new_ip=None, author_info=None, submit_state=None,
+                        text_color=None, text_bg = None, note_color=None, note_bg=None,
+                        theme=None):
         if new_ip:
             sql = f"update settings set setting_value=? where setting_name='last_ip'"
             parameters = new_ip
@@ -187,7 +192,33 @@ class ReadAndWriteDate:
                 f"update settings set setting_value=? where setting_name='submit_state'"
             )
             parameters = submit_state
+        elif text_color:
+            sql = (
+                f"update settings set setting_value=? where setting_name='text_color'"
+            )
+            parameters = text_color
+        elif text_bg:
+            sql = (
+                f"update settings set setting_value=? where setting_name='text_bg'"
+            )
+            parameters = text_bg
+        elif note_color:
+            sql = (
+                f"update settings set setting_value=? where setting_name='note_color'"
+            )
+            parameters = note_color
+        elif note_bg:
+            sql = (
+                f"update settings set setting_value=? where setting_name='note_bg'"
+            )
+            parameters = note_bg
+        elif theme:
+            sql = (
+                f"update settings set setting_value=? where setting_name='theme'"
+            )
+            parameters = theme
+
         else:
             return
-        self.c.execute(sql, (parameters,))
-        self.conn.commit()
+        self.c_settings.execute(sql, (parameters,))
+        self.settings_conn.commit()

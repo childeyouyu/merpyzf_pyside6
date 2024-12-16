@@ -86,35 +86,7 @@ class MyWidget(QtWidgets.QWidget):
             QtWidgets.QMessageBox.information(self, "提示", "书名不能为空哦！")
             return
         self.read_write_date.save_book(title, author, translator, publisher, isbn, book_introduction)
-        # elif text == "":
-        #     QtWidgets.QMessageBox.information(self, "提示", "没有原文去哪写书评！")
-        #     return
 
-        # status_code = submit_note(
-        #     ip,
-        #     {
-        #         "title": title,
-        #         "cover": cover,
-        #         "author": author,
-        #         "translator": translator,
-        #         "publisher": publisher,
-        #         "isbn": isbn,
-        #     },
-        #     text,
-        #     note,
-        # )
-
-        # check status code and display output
-        # if status_code == 200:  # 判断返回状态码
-        #     print("保存成功！")
-        #     # 弹出提示窗口，显示：保存成功
-        #     QtWidgets.QMessageBox.information(self, "提示", "保存成功！")
-        #     # self.note_text.delete("1.0", "end")  # 清空笔记文本框
-        # else:
-        #     QtWidgets.QMessageBox.information(
-        #         self, "提示", "保存失败，检查你填入的内容"
-        #     )
-        #     print("保存失败，请重试")
 
     def file_to_merpyzf_btn_clicked(self):
         ip = self.ip_edit.text()  # 获取 ip 输入

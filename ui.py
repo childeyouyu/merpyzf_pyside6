@@ -1,22 +1,46 @@
 import sqlite3
 from pathlib import Path
 
+from PySide6 import QtCore, QtGui
 from PySide6.QtCore import *
 from PySide6.QtGui import *
+from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import *
+# from framelesshelper.widgets import FramelessMainWindow
+import os
+
+from qt_material import QtStyleTools, apply_stylesheet, list_themes
 
 from App import MyWidget
 from functions.post_to_merpyzf import post_to_merpyzf
 from functions.save_to_date import ReadAndWriteDate
 
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, QtStyleTools):
 
     def __init__(self):
         super().__init__()
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint |
+                            QtCore.Qt.WindowType.WindowSystemMenuHint |
+                            QtCore.Qt.WindowType.WindowMinimizeButtonHint |
+                            QtCore.Qt.WindowType.WindowCloseButtonHint |
+                            QtCore.Qt.WindowType.WindowMaximizeButtonHint)
+        # self.app = app
+        # self.main = QUiLoader().load('assets/main_window.ui', self)
+        # self.main.show()
+        # self.add_menu_theme(self.main, self.main.menuStyles)
+        # self.main = QUiLoader().load('assets/dock_theme.ui', self)
         self.toolbar = None
+        app_icon_path = os.path.join(os.path.dirname(__file__), 'assets/favicon.png')
+        self.setWindowIcon(QIcon(app_icon_path))
+
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.read_write_date = ReadAndWriteDate()
         self.settings = self.read_write_date.get_settings()
+
+        # 加载样式表
+        apply_stylesheet(self, theme=self.settings[7][1])
 
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setBlurRadius(15)
@@ -27,7 +51,11 @@ class MainWindow(QMainWindow):
 
         self.resize(800, 600)
         self.setWindowTitle("纸间书摘 PC 书评导入")
-        self.setWindowIcon(QIcon("assets/favicon.png"))
+        # 窗口透明度
+        # self.setWindowOpacity(0.2)
+        # 设置窗口标志，去掉默认边框
+        # self.setWindowFlags(Qt.FramelessWindowHint)
+
 
         self.ip = self.settings[0][1]
         print(self.ip)
@@ -37,6 +65,29 @@ class MainWindow(QMainWindow):
         self.initialize_toolbar()
 
         self.initialize_ui()
+        self._last_mouse_pos = None
+        self._inertia_animation = None
+        # 设置系统托盘图标
+        self.create_system_tray()
+
+
+    def event(self, event):
+        # 处理Windows的系统消息
+        if event.type() == QtGui.QWindowStateChangeEvent:
+            # 如果窗口最小化
+            if self.windowState() & Qt.WindowState.WindowMinimized:
+                # 切换窗口状态：从最小化恢复
+                self.setWindowState(Qt.WindowState.WindowNoState)
+                return True
+        return super().event(event)
+
+    # 设置边框圆角
+    def paintEvent(self, event: QPaintEvent) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # 设置抗锯齿，不然边框会有明显锯齿
+        # painter.setBrush(Qt.white)  # 设置窗体颜色
+        painter.drawRoundedRect(self.rect(), 10, 10)
+        super().paintEvent(event)
 
     def initialize_toolbar(self):
         self.removeToolBar(self.toolbar)
@@ -279,6 +330,18 @@ class MainWindow(QMainWindow):
 
         self.btn_max.clearFocus()
 
+    def mouseDoubleClickEvent(self, event):
+
+        """ 双击最大化窗口 """
+        if self.isMaximized():
+            self.showNormal()
+            self.btn_max.setIcon(QIcon("assets/max-normal.svg"))
+        else:
+            self.showMaximized()
+            self.btn_max.setIcon(QIcon("assets/max-max.svg"))
+
+        # self.btn_max.clearFocus()
+
     def move_title_bar(self, event):
         """
         拖动顶部标题条
@@ -417,8 +480,8 @@ class MainWindow(QMainWindow):
             text = QLabel(i[1])
             note = QLabel(i[2])
             if i[3] == "have_send" and self.settings[2][1] == "show":
-                text.setStyleSheet("color: red; background-color: green;")
-                note.setStyleSheet("color: red; background-color: green;")
+                text.setStyleSheet(f"color: {self.settings[3][1]}; background-color: {self.settings[4][1]};")
+                note.setStyleSheet(f"color: {self.settings[5][1]}; background-color: {self.settings[6][1]};")
             # layout_area.addWidget(zw)
             layout_area.addWidget(
                 text
@@ -517,6 +580,39 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         layout = QFormLayout(widget)
 
+        combobox = QComboBox()
+        themes = list_themes()
+        combobox.addItems(themes)
+        combobox.setCurrentText(os.environ.get('QTMATERIAL_THEME'))
+        layout.addRow(QLabel("主题配色"), combobox)
+
+        def index_changed(index):
+            # print(index)
+            print(themes[index])
+            apply_stylesheet(self, themes[index])
+
+            # self.apply_stylesheet(self.main, themes[index])
+
+            if themes[index].find("light") != -1:
+                self.apply_stylesheet(self, themes[index], invert_secondary=True)
+            else:
+                self.apply_stylesheet(self, themes[index])
+
+            self.window_max()
+            self.window_max()
+            self.read_write_date.update_settings(theme=themes[index])
+
+            #
+            # self.repaint()
+            # # def refresh_all():
+            # #     for subwindow in self.subwindows:
+            # #         subwindow.update()
+            # #
+            # # refresh_all()
+
+        combobox.currentIndexChanged.connect(index_changed)
+
+
         def on_state_changed():
             if checkbox_author.isChecked():
                 self.read_write_date.update_settings(author_info="show")
@@ -561,4 +657,128 @@ class MainWindow(QMainWindow):
 
         checkbox_submit_state.stateChanged.connect(on_submit_state_changed)
         layout.addRow(QLabel("显示书摘是否上传到纸间书摘"), checkbox_submit_state)
+
+        # 设置书摘颜色
+        self.color_list = [
+            list(self.settings[3]),
+            list(self.settings[4]),
+            list(self.settings[5]),
+            list(self.settings[6]),
+        ]
+        text_color = self.col_widget("原文文字颜色", self.color_list[0])
+        text_bg = self.col_widget("原文背景颜色", self.color_list[1])
+        note_color = self.col_widget("笔记文字颜色", self.color_list[2])
+        note_bg = self.col_widget("笔记背景颜色", self.color_list[3])
+
+        layout.addWidget(text_color[0])
+        layout.addWidget(text_bg[0])
+        layout.addWidget(note_color[0])
+        layout.addWidget(note_bg[0])
+
+        label_version = QLabel("当前软件版本： <a href='https://github.com/childeyouyu/merpyzf_pyside6/releases'>v0.2.1</a>，点击查看更新日志。")
+
+        label_version.setOpenExternalLinks(True)
+        layout.addWidget(label_version)
+
         self.setCentralWidget(widget)
+
+
+
+    def col_widget(self, name, value):
+        color = value[1]
+        # print(value)
+
+        widget = QWidget()
+        layout = QHBoxLayout(widget)
+
+        label_name = QLabel(name)
+        label_color = QLabel(color)
+
+        def update_color(_color):
+            try:
+                label_color.setStyleSheet(f"color: {_color};")
+                label_color.setText(_color)
+
+                self.color_list[self.color_list.index(value)].pop(1)
+                self.color_list[self.color_list.index(value)].append(_color)
+
+                self.read_write_date.update_settings(
+                    text_color=self.color_list[0][1],
+                    text_bg=self.color_list[1][1],
+                    note_color=self.color_list[2][1],
+                    note_bg=self.color_list[3][1],
+                )
+            except Exception as e:
+                print(e)
+                label_color.setText("颜色错误")
+
+        update_color(color)
+
+        color_name = QLineEdit()
+        color_name.setPlaceholderText("输入想要设置的颜色")
+        color_name.editingFinished.connect(lambda :update_color(color_name.text()))
+
+        layout.addWidget(label_name)
+        layout.addWidget(label_color)
+        layout.addWidget(color_name)
+
+        return [widget, label_name, label_color, color_name]
+
+    def create_system_tray(self):
+        # 创建系统托盘图标
+        self.tray_icon = QSystemTrayIcon(self)
+
+        # 设置图标 - 请替换为您自己的图标路径
+        icon_path = os.path.join(os.path.dirname(__file__), 'assets/favicon.png')
+        self.tray_icon.setIcon(QIcon(icon_path))
+
+        # 创建托盘菜单
+        tray_menu = QMenu()
+
+        # 显示主窗口的动作
+        show_action = QAction("显示", self)
+        show_action.triggered.connect(self.show_window)
+        tray_menu.addAction(show_action)
+
+        # 隐藏主窗口的动作
+        hide_action = QAction("隐藏", self)
+        hide_action.triggered.connect(self.hide_window)
+        tray_menu.addAction(hide_action)
+
+        # 退出应用程序的动作
+        exit_action = QAction("退出", self)
+        exit_action.triggered.connect(QApplication.instance().quit)
+        tray_menu.addAction(exit_action)
+
+        # 设置托盘菜单
+        self.tray_icon.setContextMenu(tray_menu)
+
+        # 双击托盘图标显示/隐藏窗口
+        self.tray_icon.activated.connect(self.tray_icon_activated)
+
+        # 显示托盘图标
+        self.tray_icon.show()
+
+    def show_window(self):
+        # 显示窗口并将其置于最前
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def hide_window(self):
+        # 隐藏窗口
+        self.hide()
+
+    def tray_icon_activated(self, reason):
+        # 处理托盘图标点击事件
+        if reason == QSystemTrayIcon.DoubleClick:
+            # 双击时切换窗口显示状态
+            if self.isVisible():
+                self.hide()
+            else:
+                self.show_window()
+
+    def closeEvent(self, event):
+        # 重写关闭事件，最小化到系统托盘而不是退出
+        event.ignore()
+        self.hide()
