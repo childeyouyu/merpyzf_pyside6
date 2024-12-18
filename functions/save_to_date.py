@@ -70,9 +70,9 @@ class ReadAndWriteDate:
             c.execute(create_table_sql)
             self.conn.commit()
 
-            print(f"Table '{name}' created successfully.")
+            return [True, f"新书： '{name}' 添加成功。"]
         else:
-            print(f"Table '{name}' already exists.")
+            return [False, f"'{name}' 已经存在，暂时不支持创建同名图书。"]
 
     def insert_note(self, text, note, note_state=False):
         """
@@ -175,9 +175,17 @@ class ReadAndWriteDate:
         self.c_settings.execute(sql_save_ip, (str(new_ip),))
         self.settings_conn.commit()
 
-    def update_settings(self, new_ip=None, author_info=None, submit_state=None,
-                        text_color=None, text_bg = None, note_color=None, note_bg=None,
-                        theme=None):
+    def update_settings(
+        self,
+        new_ip=None,
+        author_info=None,
+        submit_state=None,
+        text_color=None,
+        text_bg=None,
+        note_color=None,
+        note_bg=None,
+        theme=None,
+    ):
         if new_ip:
             sql = f"update settings set setting_value=? where setting_name='last_ip'"
             parameters = new_ip
@@ -193,29 +201,19 @@ class ReadAndWriteDate:
             )
             parameters = submit_state
         elif text_color:
-            sql = (
-                f"update settings set setting_value=? where setting_name='text_color'"
-            )
+            sql = f"update settings set setting_value=? where setting_name='text_color'"
             parameters = text_color
         elif text_bg:
-            sql = (
-                f"update settings set setting_value=? where setting_name='text_bg'"
-            )
+            sql = f"update settings set setting_value=? where setting_name='text_bg'"
             parameters = text_bg
         elif note_color:
-            sql = (
-                f"update settings set setting_value=? where setting_name='note_color'"
-            )
+            sql = f"update settings set setting_value=? where setting_name='note_color'"
             parameters = note_color
         elif note_bg:
-            sql = (
-                f"update settings set setting_value=? where setting_name='note_bg'"
-            )
+            sql = f"update settings set setting_value=? where setting_name='note_bg'"
             parameters = note_bg
         elif theme:
-            sql = (
-                f"update settings set setting_value=? where setting_name='theme'"
-            )
+            sql = f"update settings set setting_value=? where setting_name='theme'"
             parameters = theme
 
         else:

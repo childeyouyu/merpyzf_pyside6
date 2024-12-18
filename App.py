@@ -85,8 +85,17 @@ class MyWidget(QtWidgets.QWidget):
         if title == "":
             QtWidgets.QMessageBox.information(self, "提示", "书名不能为空哦！")
             return
-        self.read_write_date.save_book(title, author, translator, publisher, isbn, book_introduction)
+        self.save_state(
+            self.read_write_date.save_book(
+                title, author, translator, publisher, isbn, book_introduction
+            )
+        )
 
+    def save_state(self, new_box):
+        if new_box[0]:
+            QtWidgets.QMessageBox.information(self, "提示", "保存成功！")
+        else:
+            QtWidgets.QMessageBox.warning(self, "提示", new_box[1])
 
     def file_to_merpyzf_btn_clicked(self):
         ip = self.ip_edit.text()  # 获取 ip 输入

@@ -6,6 +6,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import *
+
 # from framelesshelper.widgets import FramelessMainWindow
 import os
 
@@ -21,18 +22,20 @@ class MainWindow(QMainWindow, QtStyleTools):
     def __init__(self):
         super().__init__()
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint |
-                            QtCore.Qt.WindowType.WindowSystemMenuHint |
-                            QtCore.Qt.WindowType.WindowMinimizeButtonHint |
-                            QtCore.Qt.WindowType.WindowCloseButtonHint |
-                            QtCore.Qt.WindowType.WindowMaximizeButtonHint)
+        self.setWindowFlags(
+            QtCore.Qt.WindowType.FramelessWindowHint
+            | QtCore.Qt.WindowType.WindowSystemMenuHint
+            | QtCore.Qt.WindowType.WindowMinimizeButtonHint
+            | QtCore.Qt.WindowType.WindowCloseButtonHint
+            | QtCore.Qt.WindowType.WindowMaximizeButtonHint
+        )
         # self.app = app
         # self.main = QUiLoader().load('assets/main_window.ui', self)
         # self.main.show()
         # self.add_menu_theme(self.main, self.main.menuStyles)
         # self.main = QUiLoader().load('assets/dock_theme.ui', self)
         self.toolbar = None
-        app_icon_path = os.path.join(os.path.dirname(__file__), 'assets/favicon.png')
+        app_icon_path = os.path.join(os.path.dirname(__file__), "assets/favicon.png")
         self.setWindowIcon(QIcon(app_icon_path))
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
@@ -56,7 +59,6 @@ class MainWindow(QMainWindow, QtStyleTools):
         # 设置窗口标志，去掉默认边框
         # self.setWindowFlags(Qt.FramelessWindowHint)
 
-
         self.ip = self.settings[0][1]
         print(self.ip)
         # 隐藏标题栏
@@ -69,7 +71,6 @@ class MainWindow(QMainWindow, QtStyleTools):
         self._inertia_animation = None
         # 设置系统托盘图标
         self.create_system_tray()
-
 
     def event(self, event):
         # 处理Windows的系统消息
@@ -84,7 +85,9 @@ class MainWindow(QMainWindow, QtStyleTools):
     # 设置边框圆角
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)  # 设置抗锯齿，不然边框会有明显锯齿
+        painter.setRenderHint(
+            QPainter.RenderHint.Antialiasing
+        )  # 设置抗锯齿，不然边框会有明显锯齿
         # painter.setBrush(Qt.white)  # 设置窗体颜色
         painter.drawRoundedRect(self.rect(), 10, 10)
         super().paintEvent(event)
@@ -95,11 +98,15 @@ class MainWindow(QMainWindow, QtStyleTools):
         toolbar = QToolBar()
         toolbar.setMovable(False)
 
-        self.btn_home = QPushButton(text="", icon=QIcon("assets/home.svg"))
+        self.btn_home = QPushButton(text="", icon=QIcon("assets/dark_icon/home.svg"))
         self.btn_home.clicked.connect(lambda: self.initialize_ui())
-        self.btn_author = QPushButton(text="", icon=QIcon("assets/author.svg"))
+        self.btn_author = QPushButton(
+            text="", icon=QIcon("assets/dark_icon/author.svg")
+        )
         self.btn_author.clicked.connect(lambda: self.interface_author())
-        self.btn_settings = QPushButton(text="", icon=QIcon("assets/settings.svg"))
+        self.btn_settings = QPushButton(
+            text="", icon=QIcon("assets/dark_icon/settings.svg")
+        )
         self.btn_settings.clicked.connect(lambda: self.interface_settings())
         self.btn_home.setFlat(True)
         self.btn_author.setFlat(True)
@@ -122,9 +129,11 @@ class MainWindow(QMainWindow, QtStyleTools):
         layout.addWidget(self.now_ip)
         layout.addStretch()
 
-        self.btn_min = QPushButton(text="", icon=QIcon("assets/min.svg"))
-        self.btn_max = QPushButton(text="", icon=QIcon("assets/max-normal.svg"))
-        btn_close = QPushButton(text="", icon=QIcon("assets/close.svg"))
+        self.btn_min = QPushButton(text="", icon=QIcon("assets/dark_icon/min.svg"))
+        self.btn_max = QPushButton(
+            text="", icon=QIcon("assets/dark_icon/max-normal.svg")
+        )
+        btn_close = QPushButton(text="", icon=QIcon("assets/dark_icon/close.svg"))
 
         self.btn_min.setFlat(True)
         self.btn_max.setFlat(True)
@@ -195,7 +204,9 @@ class MainWindow(QMainWindow, QtStyleTools):
 
             book_name.clicked.connect(lambda _, x=book[1]: self.interface_book_note(x))
 
-            remove_book = QPushButton(text="", icon=QIcon("assets/remove.svg"))
+            remove_book = QPushButton(
+                text="", icon=QIcon("assets/dark_icon/remove.svg")
+            )
             remove_book.setFlat(True)
             remove_book.clicked.connect(lambda _, x=book[1]: self.ok_ok(x))
 
@@ -204,6 +215,7 @@ class MainWindow(QMainWindow, QtStyleTools):
 
             bw_layout.addWidget(widget_book)
 
+        bw_layout.addStretch()
         area.setWidget(books_widget)
         self.layout.addWidget(area)
 
@@ -323,22 +335,21 @@ class MainWindow(QMainWindow, QtStyleTools):
     def window_max(self):
         if self.isMaximized():
             self.showNormal()
-            self.btn_max.setIcon(QIcon("assets/max-normal.svg"))
+            self.btn_max.setIcon(QIcon("assets/dark_icon/max-normal.svg"))
         else:
             self.showMaximized()
-            self.btn_max.setIcon(QIcon("assets/max-max.svg"))
+            self.btn_max.setIcon(QIcon("assets/dark_icon/max-max.svg"))
 
         self.btn_max.clearFocus()
 
     def mouseDoubleClickEvent(self, event):
-
-        """ 双击最大化窗口 """
+        """双击最大化窗口"""
         if self.isMaximized():
             self.showNormal()
-            self.btn_max.setIcon(QIcon("assets/max-normal.svg"))
+            self.btn_max.setIcon(QIcon("assets/dark_icon/max-normal.svg"))
         else:
             self.showMaximized()
-            self.btn_max.setIcon(QIcon("assets/max-max.svg"))
+            self.btn_max.setIcon(QIcon("assets/dark_icon/max-max.svg"))
 
         # self.btn_max.clearFocus()
 
@@ -480,8 +491,12 @@ class MainWindow(QMainWindow, QtStyleTools):
             text = QLabel(i[1])
             note = QLabel(i[2])
             if i[3] == "have_send" and self.settings[2][1] == "show":
-                text.setStyleSheet(f"color: {self.settings[3][1]}; background-color: {self.settings[4][1]};")
-                note.setStyleSheet(f"color: {self.settings[5][1]}; background-color: {self.settings[6][1]};")
+                text.setStyleSheet(
+                    f"color: {self.settings[3][1]}; background-color: {self.settings[4][1]};"
+                )
+                note.setStyleSheet(
+                    f"color: {self.settings[5][1]}; background-color: {self.settings[6][1]};"
+                )
             # layout_area.addWidget(zw)
             layout_area.addWidget(
                 text
@@ -504,7 +519,9 @@ class MainWindow(QMainWindow, QtStyleTools):
             layout_control_book = QHBoxLayout(widget_control_book)
 
             change_note_btn = QPushButton("修改书摘")
-            remove_note_btn = QPushButton(icon=QIcon("assets/remove.svg"))  # 删除书摘
+            remove_note_btn = QPushButton(
+                text="", icon=QIcon("assets/dark_icon/remove.svg")
+            )  # 删除书摘
             change_note_btn.clicked.connect(
                 lambda _, t=i[1], n=i[2]: self.interface_add_note_interface(
                     self.book_name, t, n
@@ -522,9 +539,6 @@ class MainWindow(QMainWindow, QtStyleTools):
             layout_area.addWidget(widget_control_book)
             # layout_area.addWidget(QPushButton("删除书摘"))
             # zw.setWordWrap(True)
-
-            # text.setStyleSheet("QLabel { width: 100%;font-size:20pt; }")
-            # note.setStyleSheet("QLabel { width: 100%;font-size:20pt; }")
 
         # 右侧:写新书摘按钮和提交书摘到手机按钮
         widget_right = QWidget()
@@ -583,7 +597,7 @@ class MainWindow(QMainWindow, QtStyleTools):
         combobox = QComboBox()
         themes = list_themes()
         combobox.addItems(themes)
-        combobox.setCurrentText(os.environ.get('QTMATERIAL_THEME'))
+        combobox.setCurrentText(os.environ.get("QTMATERIAL_THEME"))
         layout.addRow(QLabel("主题配色"), combobox)
 
         def index_changed(index):
@@ -602,16 +616,7 @@ class MainWindow(QMainWindow, QtStyleTools):
             self.window_max()
             self.read_write_date.update_settings(theme=themes[index])
 
-            #
-            # self.repaint()
-            # # def refresh_all():
-            # #     for subwindow in self.subwindows:
-            # #         subwindow.update()
-            # #
-            # # refresh_all()
-
         combobox.currentIndexChanged.connect(index_changed)
-
 
         def on_state_changed():
             if checkbox_author.isChecked():
@@ -675,14 +680,14 @@ class MainWindow(QMainWindow, QtStyleTools):
         layout.addWidget(note_color[0])
         layout.addWidget(note_bg[0])
 
-        label_version = QLabel("当前软件版本： <a href='https://github.com/childeyouyu/merpyzf_pyside6/releases'>v0.2.1</a>，点击查看更新日志。")
+        label_version = QLabel(
+            "当前软件版本： <a href='https://github.com/childeyouyu/merpyzf_pyside6/releases'>v0.2.1</a>，点击查看更新日志。"
+        )
 
         label_version.setOpenExternalLinks(True)
         layout.addWidget(label_version)
 
         self.setCentralWidget(widget)
-
-
 
     def col_widget(self, name, value):
         color = value[1]
@@ -716,7 +721,7 @@ class MainWindow(QMainWindow, QtStyleTools):
 
         color_name = QLineEdit()
         color_name.setPlaceholderText("输入想要设置的颜色")
-        color_name.editingFinished.connect(lambda :update_color(color_name.text()))
+        color_name.editingFinished.connect(lambda: update_color(color_name.text()))
 
         layout.addWidget(label_name)
         layout.addWidget(label_color)
@@ -729,7 +734,7 @@ class MainWindow(QMainWindow, QtStyleTools):
         self.tray_icon = QSystemTrayIcon(self)
 
         # 设置图标 - 请替换为您自己的图标路径
-        icon_path = os.path.join(os.path.dirname(__file__), 'assets/favicon.png')
+        icon_path = os.path.join(os.path.dirname(__file__), "assets/favicon.png")
         self.tray_icon.setIcon(QIcon(icon_path))
 
         # 创建托盘菜单
