@@ -1,10 +1,10 @@
+import logging
 import sqlite3
 from pathlib import Path
 
 from PySide6 import QtCore, QtGui
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import *
 
 # from framelesshelper.widgets import FramelessMainWindow
@@ -35,9 +35,11 @@ class MainWindow(QMainWindow, QtStyleTools):
         # self.add_menu_theme(self.main, self.main.menuStyles)
         # self.main = QUiLoader().load('assets/dock_theme.ui', self)
         self.toolbar = None
-        app_icon_path = os.path.join(os.path.dirname(__file__), "assets/favicon.png")
-        self.setWindowIcon(QIcon(app_icon_path))
+        # app_icon_path = os.path.join(os.path.dirname(__file__), "assets/favicon.png")
+        # self.setWindowIcon(QIcon(app_icon_path))
+        # Windows平台专用设置
 
+        self.setWindowIcon(QIcon("assets/favicon.png"))
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
         self.read_write_date = ReadAndWriteDate()
         self.settings = self.read_write_date.get_settings()
@@ -98,15 +100,14 @@ class MainWindow(QMainWindow, QtStyleTools):
         toolbar = QToolBar()
         toolbar.setMovable(False)
 
-        self.btn_home = QPushButton(text="", icon=QIcon("assets/dark_icon/home.svg"))
+        self.btn_home = QPushButton()
+        self.btn_home.setIcon(QIcon("./assets/dark_icon/home.svg"))
         self.btn_home.clicked.connect(lambda: self.initialize_ui())
-        self.btn_author = QPushButton(
-            text="", icon=QIcon("assets/dark_icon/author.svg")
-        )
+        self.btn_author = QPushButton()
+        self.btn_author.setIcon(QIcon("./assets/dark_icon/author.svg"))
         self.btn_author.clicked.connect(lambda: self.interface_author())
-        self.btn_settings = QPushButton(
-            text="", icon=QIcon("assets/dark_icon/settings.svg")
-        )
+        self.btn_settings = QPushButton()
+        self.btn_settings.setIcon(QIcon("./assets/dark_icon/settings.svg"))
         self.btn_settings.clicked.connect(lambda: self.interface_settings())
         self.btn_home.setFlat(True)
         self.btn_author.setFlat(True)
@@ -129,11 +130,12 @@ class MainWindow(QMainWindow, QtStyleTools):
         layout.addWidget(self.now_ip)
         layout.addStretch()
 
-        self.btn_min = QPushButton(text="", icon=QIcon("assets/dark_icon/min.svg"))
-        self.btn_max = QPushButton(
-            text="", icon=QIcon("assets/dark_icon/max-normal.svg")
-        )
-        btn_close = QPushButton(text="", icon=QIcon("assets/dark_icon/close.svg"))
+        self.btn_min = QPushButton()
+        self.btn_min.setIcon(QIcon("./assets/dark_icon/min.svg"))
+        self.btn_max = QPushButton()
+        self.btn_max.setIcon(QIcon("./assets/dark_icon/max-normal.svg"))
+        btn_close = QPushButton()
+        btn_close.setIcon(QIcon("./assets/dark_icon/close.svg"))
 
         self.btn_min.setFlat(True)
         self.btn_max.setFlat(True)
@@ -204,9 +206,8 @@ class MainWindow(QMainWindow, QtStyleTools):
 
             book_name.clicked.connect(lambda _, x=book[1]: self.interface_book_note(x))
 
-            remove_book = QPushButton(
-                text="", icon=QIcon("assets/dark_icon/remove.svg")
-            )
+            remove_book = QPushButton()
+            remove_book.setIcon(QIcon("./assets/dark_icon/delete.svg"))
             remove_book.setFlat(True)
             remove_book.clicked.connect(lambda _, x=book[1]: self.ok_ok(x))
 
@@ -254,7 +255,7 @@ class MainWindow(QMainWindow, QtStyleTools):
         layout.addWidget(label_2)
 
         label_3 = QLabel()
-        pixmap = QPixmap("assets/公子有语.png")
+        pixmap = QPixmap("../assets/公子有语.png")
         # 缩放图片到新的尺寸
         scaled_pixmap = pixmap.scaled(
             300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
@@ -335,10 +336,10 @@ class MainWindow(QMainWindow, QtStyleTools):
     def window_max(self):
         if self.isMaximized():
             self.showNormal()
-            self.btn_max.setIcon(QIcon("assets/dark_icon/max-normal.svg"))
+            self.btn_max.setIcon(QIcon("./assets/dark_icon/max-normal.svg"))
         else:
             self.showMaximized()
-            self.btn_max.setIcon(QIcon("assets/dark_icon/max-max.svg"))
+            self.btn_max.setIcon(QIcon("./assets/dark_icon/max-max.svg"))
 
         self.btn_max.clearFocus()
 
@@ -346,10 +347,10 @@ class MainWindow(QMainWindow, QtStyleTools):
         """双击最大化窗口"""
         if self.isMaximized():
             self.showNormal()
-            self.btn_max.setIcon(QIcon("assets/dark_icon/max-normal.svg"))
+            self.btn_max.setIcon(QIcon("./assets/dark_icon/max-normal.svg"))
         else:
             self.showMaximized()
-            self.btn_max.setIcon(QIcon("assets/dark_icon/max-max.svg"))
+            self.btn_max.setIcon(QIcon("./assets/dark_icon/max-max.svg"))
 
         # self.btn_max.clearFocus()
 
@@ -383,13 +384,8 @@ class MainWindow(QMainWindow, QtStyleTools):
             else:
                 self.submit_phone = False
 
-                self.read_write_date.update_settings(author_info="hide")
-            self.settings = self.read_write_date.get_settings()
-            self.initialize_toolbar()
-            self.now_ui.setText("设置")
-
         submit_note_or_not_checkbox = QCheckBox("同时提交书摘到纸间书摘")
-        submit_note_or_not_checkbox.stateChanged.connect(on_state_changed)
+        submit_note_or_not_checkbox.stateChanged.connect(lambda: on_state_changed())
         layout.addWidget(submit_note_or_not_checkbox)
 
         text = QTextEdit(old_text)
@@ -519,9 +515,8 @@ class MainWindow(QMainWindow, QtStyleTools):
             layout_control_book = QHBoxLayout(widget_control_book)
 
             change_note_btn = QPushButton("修改书摘")
-            remove_note_btn = QPushButton(
-                text="", icon=QIcon("assets/dark_icon/remove.svg")
-            )  # 删除书摘
+            remove_note_btn = QPushButton()  # 删除书摘
+            remove_note_btn.setIcon(QIcon("./assets/dark_icon/delete.svg"))
             change_note_btn.clicked.connect(
                 lambda _, t=i[1], n=i[2]: self.interface_add_note_interface(
                     self.book_name, t, n
@@ -594,6 +589,7 @@ class MainWindow(QMainWindow, QtStyleTools):
         widget = QWidget()
         layout = QFormLayout(widget)
 
+        # 显示主题设置选项
         combobox = QComboBox()
         themes = list_themes()
         combobox.addItems(themes)
@@ -601,11 +597,8 @@ class MainWindow(QMainWindow, QtStyleTools):
         layout.addRow(QLabel("主题配色"), combobox)
 
         def index_changed(index):
-            # print(index)
-            print(themes[index])
+            # 设置主题
             apply_stylesheet(self, themes[index])
-
-            # self.apply_stylesheet(self.main, themes[index])
 
             if themes[index].find("light") != -1:
                 self.apply_stylesheet(self, themes[index], invert_secondary=True)
@@ -619,6 +612,7 @@ class MainWindow(QMainWindow, QtStyleTools):
         combobox.currentIndexChanged.connect(index_changed)
 
         def on_state_changed():
+            # 是否显示作者页面
             if checkbox_author.isChecked():
                 self.read_write_date.update_settings(author_info="show")
                 checkbox_author.setText("已显示")
@@ -663,6 +657,20 @@ class MainWindow(QMainWindow, QtStyleTools):
         checkbox_submit_state.stateChanged.connect(on_submit_state_changed)
         layout.addRow(QLabel("显示书摘是否上传到纸间书摘"), checkbox_submit_state)
 
+        # 设置exit_way的值
+        checkbox_exit_way = QCheckBox("关闭按钮是否直接退出")
+        if self.settings[8][1] == "exit_now":
+            checkbox_exit_way.setChecked(True)
+
+        def change_exit_way():
+            if checkbox_exit_way.isChecked():
+                self.read_write_date.update_settings(exit_way="exit_now")
+            else:
+                self.read_write_date.update_settings(exit_way="exit_ask")
+
+        checkbox_exit_way.stateChanged.connect(change_exit_way)
+        layout.addRow(QLabel("关闭按钮是否直接退出"), checkbox_exit_way)
+
         # 设置书摘颜色
         self.color_list = [
             list(self.settings[3]),
@@ -681,7 +689,7 @@ class MainWindow(QMainWindow, QtStyleTools):
         layout.addWidget(note_bg[0])
 
         label_version = QLabel(
-            "当前软件版本： <a href='https://github.com/childeyouyu/merpyzf_pyside6/releases'>v0.2.1</a>，点击查看更新日志。"
+            "当前软件版本： <a href='https://github.com/childeyouyu/merpyzf_pyside6/releases'>v0.2.2</a>，点击查看更新日志。"
         )
 
         label_version.setOpenExternalLinks(True)
@@ -735,7 +743,7 @@ class MainWindow(QMainWindow, QtStyleTools):
 
         # 设置图标 - 请替换为您自己的图标路径
         icon_path = os.path.join(os.path.dirname(__file__), "assets/favicon.png")
-        self.tray_icon.setIcon(QIcon(icon_path))
+        self.tray_icon.setIcon(QIcon("assets/favicon.png"))
 
         # 创建托盘菜单
         tray_menu = QMenu()
@@ -746,9 +754,9 @@ class MainWindow(QMainWindow, QtStyleTools):
         tray_menu.addAction(show_action)
 
         # 隐藏主窗口的动作
-        hide_action = QAction("隐藏", self)
-        hide_action.triggered.connect(self.hide_window)
-        tray_menu.addAction(hide_action)
+        # hide_action = QAction("隐藏", self)
+        # hide_action.triggered.connect(self.hide_window)
+        # tray_menu.addAction(hide_action)
 
         # 退出应用程序的动作
         exit_action = QAction("退出", self)
@@ -762,13 +770,14 @@ class MainWindow(QMainWindow, QtStyleTools):
         self.tray_icon.activated.connect(self.tray_icon_activated)
 
         # 显示托盘图标
-        self.tray_icon.show()
+        # self.tray_icon.show()
 
     def show_window(self):
         # 显示窗口并将其置于最前
         self.show()
         self.raise_()
         self.activateWindow()
+        self.tray_icon.hide()
 
     def hide_window(self):
         # 隐藏窗口
@@ -780,10 +789,18 @@ class MainWindow(QMainWindow, QtStyleTools):
             # 双击时切换窗口显示状态
             if self.isVisible():
                 self.hide()
+                self.tray_icon.show()
             else:
                 self.show_window()
+                self.tray_icon.hide()
 
     def closeEvent(self, event):
-        # 重写关闭事件，最小化到系统托盘而不是退出
-        event.ignore()
-        self.hide()
+        exit_way = self.read_write_date.get_settings()[8][1]
+        if exit_way == "exit_now":
+            # 关闭时直接退出应用程序
+            self.close()
+        else:
+            # 重写关闭事件，最小化到系统托盘而不是退出
+            event.ignore()
+            self.hide()
+            self.tray_icon.show()

@@ -185,6 +185,7 @@ class ReadAndWriteDate:
         note_color=None,
         note_bg=None,
         theme=None,
+        exit_way=None,
     ):
         if new_ip:
             sql = f"update settings set setting_value=? where setting_name='last_ip'"
@@ -215,7 +216,9 @@ class ReadAndWriteDate:
         elif theme:
             sql = f"update settings set setting_value=? where setting_name='theme'"
             parameters = theme
-
+        elif exit_way:
+            sql = f"update settings set setting_value=? where setting_name='exit_way'"
+            parameters = exit_way
         else:
             return
         self.c_settings.execute(sql, (parameters,))
